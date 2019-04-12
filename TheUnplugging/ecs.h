@@ -8,9 +8,9 @@
 #include <cassert>
 
 #include <memory>
+#include "id.h"
 #include "system.h"
-
-using ID = unsigned int;
+#include "vfs.h"
 
 template<typename T>
 struct Slot {
@@ -56,9 +56,9 @@ struct Store : ComponentStore {
 	T* id_to_obj[max_entities];
 	Slot<T>* components;
 	Slot<T>* free_slot;
-	int N;
+	unsigned int N;
 
-	Store(int max_number) {
+	Store(unsigned int max_number) {
 		N = max_number;
 		assert(N > 0);
 
@@ -67,7 +67,7 @@ struct Store : ComponentStore {
 		}
 
 		components = new Slot<T>[N];
-		for (int i = 0; i < N - 1; i++) {
+		for (unsigned int i = 0; i < N - 1; i++) {
 			components[i].next = &components[i + 1];
 		}
 
@@ -131,11 +131,11 @@ struct World {
 
 	std::unique_ptr<ComponentStore> components[components_hash_size]; 
 	std::vector<std::unique_ptr<System>> systems;
-
+	Level level;
 
 	template<typename T>
 	constexpr void add(Store<T>* store) {
-		components[(unsigned long)type_id<T>() % components_hash_size] = std::unique_ptr<ComponentStore>(store);
+		components[(size_t)type_id<T>() % components_hash_size] = std::unique_ptr<ComponentStore>(store);
 	}
 
 	void add(System* system) {
@@ -144,7 +144,7 @@ struct World {
 
 	template<typename T>
 	constexpr Store<T>* get() {
-		return (Store<T>*)(components[(unsigned long)type_id<T>() % components_hash_size].get());
+		return (Store<T>*)(components[(size_t)type_id<T>() % components_hash_size].get());
 	}
 
 	template<typename T>
@@ -178,7 +178,7 @@ struct World {
 		Store<Entity>* entity_store = get<Entity>();
 
 		std::vector<T*> arr;
-		for (int i = 0; i < store->N; i++) {
+		for (unsigned int i = 0; i < store->N; i++) {
 			auto slot = &store->components[i];
 
 			if (!slot->is_enabled) continue;
@@ -222,17 +222,17 @@ struct World {
 		return ids;
 	}
 
-	void render(Layermask layermask) {
+	void render(RenderParams& params) {
 		for (int i = 0; i < systems.size(); i++) {
 			auto system = systems[i].get();
-			system->render(*this, layermask);
+			system->render(*this, params);
 		}
 	}
 
-	void update(Layermask layermask) {
+	void update(UpdateParams& params) {
 		for (int i = 0; i < systems.size(); i++) {
 			auto system = systems[i].get();
-			system->update(*this, layermask);
+			system->update(*this, params);
 		}
 	}
 

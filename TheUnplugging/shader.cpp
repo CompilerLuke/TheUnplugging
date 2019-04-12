@@ -31,7 +31,6 @@ Shader* load_Shader(World& world, const std::string& vfilename, const std::strin
 }
 
 Shader::~Shader() {
-	std::cout << "deleted shader" << std::endl;
 	glDeleteProgram(id);
 }
 
@@ -58,6 +57,10 @@ GLint make_shader(const std::string& filename, const std::string& source, GLenum
 	return shader;
 }
 
+void Shader::on_load(World& world) {
+	this->load_in_place(world);
+}
+
 void Shader::load_in_place(World& world) {
 	std::string vshader_source;
 	std::string fshader_source;
@@ -70,8 +73,8 @@ void Shader::load_in_place(World& world) {
 	fshader_source = prefix;
 
 	{
-		File vshader_f(v_filename);
-		File fshader_f(f_filename);
+		File vshader_f(world.level, v_filename);
+		File fshader_f(world.level, f_filename);
 
 		vshader_source += vshader_f.read();
 		fshader_source += fshader_f.read();
@@ -104,8 +107,8 @@ void Shader::load_in_place(World& world) {
 
 	this->irradianceMap = this->location("irradianceMap");
 
-	this->v_time_modified = time_modified(v_filename);
-	this->f_time_modified = time_modified(f_filename);
+	this->v_time_modified = world.level.time_modified(v_filename);
+	this->f_time_modified = world.level.time_modified(f_filename);
 
 	if (this->supports_instancing && this->instanced) {
 		auto instanced_version = load_Shader(world, v_filename, f_filename, true, true);

@@ -8,3 +8,4 @@ GLenum numberType_to_gl(NumberType type) {
 	if (type == Float) return GL_FLOAT;
 	else return GL_INT;
 }
+

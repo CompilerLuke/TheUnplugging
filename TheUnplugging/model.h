@@ -26,16 +26,29 @@ struct Mesh {
 
 	Mesh() {};
 	void submit();
-	void render(ID, glm::mat4&, std::vector<Material>&);
+	void render(ID, glm::mat4*, std::vector<Material>&, RenderParams&);
 };
 
 struct Model {
 	std::string path;
 	std::vector<Mesh> meshes;
 	std::vector<std::string> materials;
+
+	void on_load(World&);
+	void load_in_place(World&);
+	void render(ID, glm::mat4*, std::vector<Material>&, RenderParams&);
 };
 
+Model* load_Model(World&, const std::string&);
+
 struct ModelRenderer {
+	bool visible;
 	int model_id;
 	std::vector<Material> materials;
+
+	void set_materials(World&, std::vector<Material>& materials);
+};
+
+struct ModelRendererSystem : System {
+	void render(World&, RenderParams&) override;
 };

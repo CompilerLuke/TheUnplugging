@@ -4,7 +4,7 @@
 #include <glm/vec3.hpp>
 #include <glm/vec2.hpp>
 #include <glm/mat4x4.hpp>
-#include "ecs.h"
+#include "id.h"
 
 enum Param_Type {
 	Param_Vec3,
@@ -23,6 +23,8 @@ struct Param {
 		glm::vec2 vec2;
 		glm::mat4 matrix;
 		ID image;
+		ID cubemap;
+		int integer;
 	};
 };
 
@@ -30,5 +32,7 @@ struct Material {
 	std::string name;
 	ID shader;
 	std::vector<Param> params;
-
+	struct DrawState* state;
 };
+
+Material* material_by_name(std::vector<Material>, const std::string&);

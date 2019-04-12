@@ -5,27 +5,25 @@
 #include <sys/stat.h>
 #include <sstream>
 
-Level level;
-
-void set_level(const std::string& asset_folder_path) {
-	level.asset_folder_path = asset_folder_path;
+void Level::set_level(const std::string& asset_folder_path) {
+	this->asset_folder_path = asset_folder_path;
 }
 
-std::string asset_path(const std::string& filename) {
-	return level.asset_folder_path + filename;
+std::string Level::asset_path(const std::string& filename) {
+	return asset_folder_path + filename;
 }
 
-std::string to_asset_path(const std::string& filename) {
+std::string Level::to_asset_path(const std::string& filename) {
 	std::string_view filename_view = filename;
-	if (filename_view._Starts_with(level.asset_folder_path)) {
-		return filename.substr(level.asset_folder_path.size(), filename.size());
+	if (filename_view._Starts_with(asset_folder_path)) {
+		return filename.substr(asset_folder_path.size(), filename.size());
 	}
 
 	throw "File not in asset path";
 }
 
-File::File(const std::string& filename) {
-	auto full_path = asset_path(filename);
+File::File(Level& level, const std::string& filename) {
+	auto full_path = level.asset_path(filename);
 
 	fstream.open(full_path);
 	if (fstream.fail()) {
@@ -39,7 +37,7 @@ std::string File::read() {
 	return strStream.str();
 }
 
-long time_modified(const std::string& filename) {
+long long Level::time_modified(const std::string& filename) {
 	std::string f = asset_path(filename);
 	
 	struct _stat buffer;

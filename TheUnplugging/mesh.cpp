@@ -1,6 +1,7 @@
 #include "model.h"
 #include "ecs.h"
 #include "temporary.h"
+#include "draw.h"
 
 void Mesh::submit() {
 	std::vector<VertexAttrib> attribs = {
@@ -18,8 +19,11 @@ void Mesh::submit() {
 	this->buffer = VertexBuffer(vertices, indices, attribs);
 }
 
-void Mesh::render(ID id, glm::mat4& model, std::vector<Material>& materials) {
+void Mesh::render(ID id, glm::mat4* model, std::vector<Material>& materials, RenderParams& params) {
 	auto material = &materials[material_id];
-	auto aabb = alloc_temporary<AABB>();
-	*aabb = this->aabb.apply(model);
+	auto aabb = TEMPORARY_ALLOC(AABB);
+	*aabb = this->aabb.apply(*model);
+
+	DrawCommand cmd(id, model, aabb, &buffer, material);
+	params.command_buffer.submit(cmd);
 }

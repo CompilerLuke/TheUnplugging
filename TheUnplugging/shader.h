@@ -37,14 +37,15 @@ struct Shader {
 	Uniform dirLight_direction;
 	Uniform dirLight_color;
 
-	long v_time_modified = 0;
-	long f_time_modified = 0;
+	long long v_time_modified = 0;
+	long long f_time_modified = 0;
 
 	bool supports_instancing = false;
 	bool instanced = false;
 	std::unique_ptr<Shader> instanced_version = NULL;
 
-	void load_in_place(World&);
+	void on_load(struct World&);
+	void load_in_place(struct World&);
 	void bind();
 
 	Shader() {};
@@ -53,11 +54,4 @@ struct Shader {
 	Uniform location(const std::string&);
 };
 
-
-struct ShaderReloadSystem {
-	void render();
-	void update();
-};
-
-
-Shader* load_Shader(World&, const std::string& vfilename, const std::string& ffilename, bool supports_instancing = false, bool instanced = false);
+Shader* load_Shader(struct World&, const std::string& vfilename, const std::string& ffilename, bool supports_instancing = false, bool instanced = false);

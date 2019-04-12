@@ -41,12 +41,12 @@ struct VertexBuffer {
 			VertexAttrib& va = vertex_attribs[i];
 
 			glEnableVertexAttribArray(i);
-			glVertexAttribPointer(i, va.length, numberType_to_gl(va.kind), false, sizeof(T), (void*)((unsigned long)va.offset));
+			glVertexAttribPointer(i, va.length, numberType_to_gl(va.kind), false, sizeof(T), (void*)((std::size_t)va.offset));
 		}
 
 		glBindVertexArray(0);
 
 		this->vao = vao;
-		this->length = indices.size();
+		this->length = (unsigned int)indices.size();
 	}
 };

@@ -20,6 +20,8 @@ TemporaryAllocator::~TemporaryAllocator() {
 	delete this->memory;
 }
 
+
+
 void* TemporaryAllocator::alloc(size_t size) {
 	auto occupied = this->occupied;
 	this->occupied += size;
@@ -28,6 +30,4 @@ void* TemporaryAllocator::alloc(size_t size) {
 	}
 	return this->memory + occupied;
 }
-
-
 
