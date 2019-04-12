@@ -19,6 +19,8 @@ struct DrawState {
 	unsigned int order;
 };
 
+extern struct DrawState default_draw_state;
+
 #include "materialSystem.h"
 
 using DrawSortKey = long long;
@@ -38,7 +40,7 @@ struct CommandBuffer {
 	std::vector<DrawCommand, STDTemporaryAllocator<DrawCommand> > commands;
 	std::unordered_map<DrawSortKey, int> instanced_buffers;
 
-	unsigned int current_texture_index;
+	unsigned int current_texture_index = 0;
 
 	CommandBuffer();
 	~CommandBuffer();

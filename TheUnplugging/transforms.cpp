@@ -4,10 +4,10 @@
 
 glm::mat4 Transform::compute_model_matrix() {
 	glm::mat4 trans(1.0f);
-	glm::translate(trans, this->position);
+	trans = glm::translate(trans, this->position);
 
 	glm::mat4 scale(1.0f);
-	glm::scale(scale, this->scale);
+	scale = glm::scale(scale, this->scale);
 
 	glm::mat4 rotation = glm::mat4_cast(this->rotation);
 

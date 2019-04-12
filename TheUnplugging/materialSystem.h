@@ -26,7 +26,11 @@ struct Param {
 		ID cubemap;
 		int integer;
 	};
+
+	Param();
 };
+
+Param make_Param_Vec3(Uniform loc, glm::vec3);
 
 struct Material {
 	std::string name;
@@ -35,4 +39,4 @@ struct Material {
 	struct DrawState* state;
 };
 
-Material* material_by_name(std::vector<Material>, const std::string&);
+Material* material_by_name(std::vector<Material>&, const std::string&);

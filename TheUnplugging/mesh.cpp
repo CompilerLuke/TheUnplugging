@@ -16,7 +16,7 @@ void Mesh::submit() {
 		this->aabb.update(v.position);
 	}
 
-	this->buffer = VertexBuffer(vertices, indices, attribs);
+	new (&this->buffer) VertexBuffer(vertices, indices, attribs);
 }
 
 void Mesh::render(ID id, glm::mat4* model, std::vector<Material>& materials, RenderParams& params) {

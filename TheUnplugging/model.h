@@ -42,8 +42,8 @@ struct Model {
 Model* load_Model(World&, const std::string&);
 
 struct ModelRenderer {
-	bool visible;
-	int model_id;
+	bool visible = true;
+	int model_id = -1;
 	std::vector<Material> materials;
 
 	void set_materials(World&, std::vector<Material>& materials);

@@ -2,14 +2,14 @@
 #include <glad/glad.h>
 #include <algorithm>
 
-struct DrawState defualt_state = {
+struct DrawState default_draw_state = {
 	Cull_None,
 	DepthFunc_Lequal,
 	0,
 	false
 };
 
-struct DrawState draw_over = {
+struct DrawState draw_draw_over = {
 	Cull_None,
 	DepthFunc_Lequal,
 	0,
@@ -159,8 +159,9 @@ void CommandBuffer::submit_to_gpu(World& world, RenderParams& render_params) {
 		if (i == 0) {
 			switch_shader(world, render_params, mat.shader, instanced);
 			cmd.buffer->bind();
-			depth_func_bind(mat.state->depth_func);
-			cull_bind(mat.state->cull);
+			//depth_func_bind(mat.state->depth_func);
+			//cull_bind(mat.state->cull);
+			set_params(*this, mat, world);
 		}
 		else {
 			auto& last_cmd = commands[i - 1];

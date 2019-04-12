@@ -74,6 +74,8 @@ Mesh process_mesh(aiMesh* mesh, const aiScene* scene, std::vector<std::string>& 
 	new_mesh.indices = std::move(indices);
 	new_mesh.aabb = std::move(aabb);
 	new_mesh.material_id = id;
+	new_mesh.submit();
+
 	return new_mesh;
 }
 

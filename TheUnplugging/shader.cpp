@@ -106,6 +106,14 @@ void Shader::load_in_place(World& world) {
 	this->id = id;
 
 	this->irradianceMap = this->location("irradianceMap");
+	this->prefilterMap = this->location("prefilterMap");
+	this->brdfLUT = this->location("brdfLUT");
+	this->model = this->location("model");
+	this->projection = this->location("projection");
+	this->view = this->location("view");
+	this->viewPos = this->location("viewPos");
+	this->dirLight_color = this->location("dirLight.direction");
+	this->dirLight_direction = this->location("dirLight.color");
 
 	this->v_time_modified = world.level.time_modified(v_filename);
 	this->f_time_modified = world.level.time_modified(f_filename);

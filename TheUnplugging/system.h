@@ -9,6 +9,8 @@ struct RenderParams {
 	glm::mat4 projection;
 	glm::mat4 view;
 	void set_shader_scene_params(struct Shader&);
+
+	RenderParams(struct CommandBuffer&);
 };
 
 struct UpdateParams {
