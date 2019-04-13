@@ -48,7 +48,7 @@ void Window::init() {
 
 	if (full_screen) {
 		auto monitor = glfwGetPrimaryMonitor();
-		window_ptr = glfwCreateWindow(width, height, c_title, NULL, NULL);
+		window_ptr = glfwCreateWindow(width, height, c_title, monitor, NULL);
 	}
 	else {
 		window_ptr = glfwCreateWindow(width, height, c_title, NULL, NULL);
@@ -91,6 +91,9 @@ bool Window::should_close() {
 
 void Window::swap_buffers() {
 	glfwSwapBuffers(window_ptr);
+}
+
+void Window::poll_inputs() {
 	glfwPollEvents();
 }
 

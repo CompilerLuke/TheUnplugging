@@ -73,3 +73,7 @@ float Input::get_horizontal_axis() {
 	if (key_down(GLFW_KEY_A)) return -1;
 	return 0;
 }
+
+void Input::clear() {
+	mouse_offset = glm::vec2(0);
+}

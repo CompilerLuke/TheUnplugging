@@ -146,6 +146,7 @@
     <ClCompile Include="draw.cpp" />
     <ClCompile Include="ecs.cpp" />
     <ClCompile Include="flyover.cpp" />
+    <ClCompile Include="frameBuffer.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="load_model.cpp" />
     <ClCompile Include="main.cpp" />
@@ -156,6 +157,7 @@
     <ClCompile Include="renderParams.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="temporary.cpp" />
+    <ClCompile Include="texture.cpp" />
     <ClCompile Include="time.cpp" />
     <ClCompile Include="transforms.cpp" />
     <ClCompile Include="update_params.cpp" />
@@ -170,6 +172,7 @@
     <ClInclude Include="ecs.h" />
     <ClInclude Include="eventDispatcher.h" />
     <ClInclude Include="flyover.h" />
+    <ClInclude Include="frameBuffer.h" />
     <ClInclude Include="id.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="layermask.h" />
@@ -179,6 +182,7 @@
     <ClInclude Include="system.h" />
     <ClInclude Include="temporary.h" />
     <ClInclude Include="game_time.h" />
+    <ClInclude Include="texture.h" />
     <ClInclude Include="transform.h" />
     <ClInclude Include="vfs.h" />
     <ClInclude Include="window.h" />

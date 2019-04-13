@@ -35,6 +35,7 @@ struct Input {
 
 	GLFWwindow* window_ptr;
 	void capture_mouse(bool);
+	void clear();
 
 	Input(Window&);
 };

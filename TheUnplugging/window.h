@@ -38,5 +38,7 @@ struct Window {
 	void init();
 	bool should_close();
 	void swap_buffers();
+	void poll_inputs();
+
 	~Window();
 };

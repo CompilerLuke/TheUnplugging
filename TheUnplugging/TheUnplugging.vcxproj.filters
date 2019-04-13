@@ -126,6 +126,12 @@
     <ClCompile Include="update_params.cpp">
       <Filter>Source Files\ecs</Filter>
     </ClCompile>
+    <ClCompile Include="texture.cpp">
+      <Filter>Source Files\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="frameBuffer.cpp">
+      <Filter>Source Files\opengl</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ecs.h">
@@ -184,6 +190,12 @@
     </ClInclude>
     <ClInclude Include="game_time.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="frameBuffer.h">
+      <Filter>Header Files\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="texture.h">
+      <Filter>Header Files\opengl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -28,10 +28,6 @@ void FlyOverSystem::update(World& world, UpdateParams& params) {
 		trans->position += forward * speed * vertical_axis;
 		trans->position += right * speed * horizontal_axis;
 
-		std::cout << "moving " << vertical_axis << std::endl;
-
-		std::cout << trans->position.x << " " << trans->position.y << " " << trans->position.z << std::endl;
-	
 		auto last_mouse_offset = params.input.mouse_offset * self->mouse_sensitivity;
 
 		if (self->past_movement_speed_length < NUM_PAST_MOVEMENT_SPEEDS) {
@@ -63,6 +59,8 @@ void FlyOverSystem::update(World& world, UpdateParams& params) {
 			params.input.capture_mouse(false);
 			mouse_offset = glm::vec2(0);
 		}
+
+		
 
 		self->yaw = -mouse_offset.x + self->yaw;
 		self->pitch = mouse_offset.y + self->pitch;

@@ -1,4 +1,5 @@
 #include <iostream>
+#include "frameBuffer.h"
 #include "ecs.h"
 #include "layermask.h"
 #include <glm/vec3.hpp>
@@ -15,6 +16,7 @@
 #include "input.h"
 #include "flyover.h"
 #include "game_time.h"
+#include "texture.h"
 
 using Velocity = glm::vec3;
 
@@ -36,6 +38,8 @@ int main() {
 	world.add(new Store<LocalTransform>(10));
 	world.add(new Store<Camera>(3));
 	world.add(new Store<Flyover>(1));
+	world.add(new Store<Texture>(10));
+	world.add(new Store<Cubemap>(10));
 
 	world.add(new CameraSystem());
 	world.add(new FlyOverSystem());
@@ -43,6 +47,7 @@ int main() {
 	world.add(new LocalTransformSystem());
 	
 	auto shader = load_Shader(world, "shaders/pbr.vert", "shaders/gizmo.frag");
+	auto texture = load_Texture(world, "normal.jpg");
 	auto model = load_Model(world, "HOVERTANK.fbx");
 
 	CommandBuffer cmd_buffer;
@@ -87,6 +92,9 @@ int main() {
 	while (!window.should_close()) {
 		temporary_allocator.clear();
 		cmd_buffer.clear();
+
+		input.clear();
+		window.poll_inputs();
 
 		update_params.layermask = game_layer;
 		time.update_time(update_params);

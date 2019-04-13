@@ -1,6 +1,7 @@
 #include "draw.h"
 #include <glad/glad.h>
 #include <algorithm>
+#include "texture.h"
 
 struct DrawState default_draw_state = {
 	Cull_None,
