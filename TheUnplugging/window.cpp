@@ -18,6 +18,11 @@ void key_callback(GLFWwindow* window_ptr, int key, int scancode, int action, int
 	window->on_key.broadcast({ key, scancode, action, mods });
 }
 
+void mouse_button_callback(GLFWwindow* window_ptr, int button, int action, int mods) {
+	auto window = (Window*)glfwGetWindowUserPointer(window_ptr);
+	window->on_mouse_button.broadcast({ button, action, mods });
+}
+
 void drop_callback(GLFWwindow* window_ptr, int count, const char** paths) {
 	auto window = (Window*)glfwGetWindowUserPointer(window_ptr);
 	
@@ -60,6 +65,7 @@ void Window::init() {
 	glfwSetKeyCallback(window_ptr, key_callback);
 	glfwSetInputMode(window_ptr, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetDropCallback(window_ptr, drop_callback);
+	glfwSetMouseButtonCallback(window_ptr, mouse_button_callback);
 
 	glfwSetWindowUserPointer(window_ptr, this);
 
@@ -85,6 +91,7 @@ bool Window::should_close() {
 
 void Window::swap_buffers() {
 	glfwSwapBuffers(window_ptr);
+	glfwPollEvents();
 }
 
 Window::~Window() {

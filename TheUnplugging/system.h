@@ -8,6 +8,9 @@ struct RenderParams {
 	struct CommandBuffer& command_buffer;
 	glm::mat4 projection;
 	glm::mat4 view;
+
+	unsigned int width = 0;
+	unsigned int height = 0;
 	void set_shader_scene_params(struct Shader&);
 
 	RenderParams(struct CommandBuffer&);
@@ -15,6 +18,10 @@ struct RenderParams {
 
 struct UpdateParams {
 	Layermask layermask;
+	struct Input& input;
+	double delta_time = 0;
+
+	UpdateParams(struct Input&);
 };
 
 struct System {

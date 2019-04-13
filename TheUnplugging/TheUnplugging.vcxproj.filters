@@ -111,6 +111,21 @@
     <ClCompile Include="materialSystem.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="camera.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="flyover.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="time.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="update_params.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ecs.h">
@@ -156,6 +171,18 @@
       <Filter>Header Files\ecs</Filter>
     </ClInclude>
     <ClInclude Include="transform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="camera.h">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="flyover.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="game_time.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

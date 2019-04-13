@@ -141,9 +141,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="buffer.cpp" />
+    <ClCompile Include="camera.cpp" />
     <ClCompile Include="culling.cpp" />
     <ClCompile Include="draw.cpp" />
     <ClCompile Include="ecs.cpp" />
+    <ClCompile Include="flyover.cpp" />
+    <ClCompile Include="input.cpp" />
     <ClCompile Include="load_model.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="materialSystem.cpp" />
@@ -153,23 +156,29 @@
     <ClCompile Include="renderParams.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="temporary.cpp" />
+    <ClCompile Include="time.cpp" />
     <ClCompile Include="transforms.cpp" />
+    <ClCompile Include="update_params.cpp" />
     <ClCompile Include="vfs.cpp" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="buffer.h" />
+    <ClInclude Include="camera.h" />
     <ClInclude Include="culling.h" />
     <ClInclude Include="draw.h" />
     <ClInclude Include="ecs.h" />
     <ClInclude Include="eventDispatcher.h" />
+    <ClInclude Include="flyover.h" />
     <ClInclude Include="id.h" />
+    <ClInclude Include="input.h" />
     <ClInclude Include="layermask.h" />
     <ClInclude Include="materialSystem.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="system.h" />
     <ClInclude Include="temporary.h" />
+    <ClInclude Include="game_time.h" />
     <ClInclude Include="transform.h" />
     <ClInclude Include="vfs.h" />
     <ClInclude Include="window.h" />

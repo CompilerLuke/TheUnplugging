@@ -79,7 +79,7 @@ struct Store : ComponentStore {
 	}
 
 	T* by_id(ID id) {
-		if (id >= N) return NULL;
+		if (id >= max_entities) return NULL;
 		return id_to_obj[id];
 	}
 
@@ -127,7 +127,7 @@ struct Entity {
 };
 
 struct World {
-	static constexpr int components_hash_size = 1003;
+	static constexpr int components_hash_size = 2007;
 
 	std::unique_ptr<ComponentStore> components[components_hash_size]; 
 	std::vector<std::unique_ptr<System>> systems;
@@ -135,6 +135,7 @@ struct World {
 
 	template<typename T>
 	constexpr void add(Store<T>* store) {
+		assert(get<T>() == NULL);
 		components[(size_t)type_id<T>() % components_hash_size] = std::unique_ptr<ComponentStore>(store);
 	}
 

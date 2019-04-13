@@ -11,6 +11,10 @@
 #include "draw.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include "transform.h"
+#include "camera.h"
+#include "input.h"
+#include "flyover.h"
+#include "game_time.h"
 
 using Velocity = glm::vec3;
 
@@ -18,6 +22,9 @@ int main() {
 	Window window;
 	window.title = "The Unplugging";
 	window.init();
+
+	Input input(window);
+	Time time;
 
 	World world;
 	world.level.set_level("C:\\Users\\User\\Desktop\\TopCCompiler\\TopCompiler\\Fernix\\assets\\level2\\");
@@ -27,21 +34,37 @@ int main() {
 	world.add(new Store<ModelRenderer>(10));
 	world.add(new Store<Transform>(10));
 	world.add(new Store<LocalTransform>(10));
+	world.add(new Store<Camera>(3));
+	world.add(new Store<Flyover>(1));
 
+	world.add(new CameraSystem());
+	world.add(new FlyOverSystem());
 	world.add(new ModelRendererSystem());
 	world.add(new LocalTransformSystem());
-
+	
 	auto shader = load_Shader(world, "shaders/pbr.vert", "shaders/gizmo.frag");
 	auto model = load_Model(world, "HOVERTANK.fbx");
 
 	CommandBuffer cmd_buffer;
 	RenderParams render_params(cmd_buffer);
-	UpdateParams update_params;
+	UpdateParams update_params(input);
 
-	auto id = world.make_ID();
-	auto e = world.make<Entity>(id);
-	auto trans = world.make<Transform>(id);
-	trans->position.z = -5;
+	auto model_renderer_id = world.make_ID();
+
+	{
+		auto id = model_renderer_id;
+		auto e = world.make<Entity>(id);
+		auto trans = world.make<Transform>(id);
+		trans->position.z = -5;
+	}
+
+	{
+		auto id = world.make_ID();
+		auto e = world.make<Entity>(id);
+		auto trans = world.make<Transform>(id);
+		auto camera = world.make <Camera>(id);
+		auto flyover = world.make<Flyover>(id);
+	}
 
 	std::vector<Param> params = {
 		make_Param_Vec3(shader->location("color"), glm::vec3(0.0f, 0.0f, 0.8f))
@@ -55,7 +78,7 @@ int main() {
 	};
 	std::vector<Material> materials = {material};
 
-	auto model_render = world.make<ModelRenderer>(id);
+	auto model_render = world.make<ModelRenderer>(model_renderer_id);
 	model_render->model_id = world.id_of(model);
 	model_render->set_materials(world, materials);
 
@@ -66,14 +89,11 @@ int main() {
 		cmd_buffer.clear();
 
 		update_params.layermask = game_layer;
+		time.update_time(update_params);
+
 		render_params.layermask = game_layer;
-		render_params.view = glm::mat4();
-		render_params.projection = glm::perspective(
-			glm::radians(60.0f), // The vertical Field of View, in radians: the amount of "zoom". Think "camera lens". Usually between 90° (extra wide) and 30° (quite zoomed in)
-			(float)window.width / (float)window.height,       // Aspect Ratio. Depends on the size of your window. Notice that 4/3 == 800/600 == 1280/960, sounds familiar ?
-			0.1f,              // Near clipping plane. Keep as big as possible, or you'll get precision issues.
-			100.0f             // Far clipping plane. Keep as little as possible.
-		);
+		render_params.width = window.width;
+		render_params.height = window.height;
 
 		world.update(update_params);
 		world.render(render_params);

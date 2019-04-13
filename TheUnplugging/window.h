@@ -13,6 +13,12 @@ struct KeyData {
 	int mods;
 };
 
+struct MouseButtonData {
+	int button;
+	int action;
+	int mods;
+};
+
 struct Window {
 	std::string title = "";
 	bool vSync = true;
@@ -24,6 +30,7 @@ struct Window {
 	EventDispatcher<glm::vec2> on_cursor_pos;
 	EventDispatcher<KeyData> on_key;
 	EventDispatcher<std::string> on_drop;
+	EventDispatcher<MouseButtonData> on_mouse_button;
 
 	GLFWwindow* window_ptr;
 
