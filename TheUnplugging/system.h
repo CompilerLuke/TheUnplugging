@@ -6,14 +6,17 @@ using Layermask = unsigned int;
 struct RenderParams {
 	Layermask layermask;
 	struct CommandBuffer& command_buffer;
+	struct Pass& pass;
+
 	glm::mat4 projection;
 	glm::mat4 view;
+	Camera* cam;
 
 	unsigned int width = 0;
 	unsigned int height = 0;
-	void set_shader_scene_params(struct Shader&);
+	void set_shader_scene_params(struct Shader&, struct World&);
 
-	RenderParams(struct CommandBuffer&);
+	RenderParams(struct CommandBuffer&, struct Pass&);
 };
 
 struct UpdateParams {

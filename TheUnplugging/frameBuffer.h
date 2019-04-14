@@ -25,20 +25,22 @@ struct AttachmentSettings {
 };
 
 struct FramebufferSettings {
-	unsigned int width;
-	unsigned int height;
+	unsigned int width = 0;
+	unsigned int height = 0;
 	DepthBufferSettings depth_buffer;
-	AttachmentSettings* depth_attachment;
-	std::vector<AttachmentSettings> color_attachmens;
+	AttachmentSettings* depth_attachment = NULL;
+	std::vector<AttachmentSettings> color_attachments;
 };
 
 struct Framebuffer {
-	unsigned int fbo;
-	unsigned int rbo;
-	unsigned int width;
-	unsigned int height;
+	unsigned int fbo = 0;
+	unsigned int rbo = 0;
+	unsigned int width = 0;
+	unsigned int height = 0;
 
+	void operator=(Framebuffer&&) noexcept;
 	Framebuffer(World&, FramebufferSettings&);
+	Framebuffer();
 
 	void bind();
 	void clear_color(glm::vec4);

@@ -19,3 +19,4 @@ struct Cubemap {
 };
 
 Texture* load_Texture(struct World&, const std::string& filename);
+Texture* make_Texture(struct World&);

@@ -42,6 +42,8 @@ struct CommandBuffer {
 
 	unsigned int current_texture_index = 0;
 
+	unsigned int next_texture_index();
+
 	CommandBuffer();
 	~CommandBuffer();
 

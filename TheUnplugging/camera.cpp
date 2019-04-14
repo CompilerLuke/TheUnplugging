@@ -19,6 +19,7 @@ void Camera::update_matrices(World& world, RenderParams& params) {
 	translate_m = glm::translate(translate_m, -transform->position);
 
 	params.view = rotate_m * translate_m;
+	params.cam = this;
 }
 
 Camera* get_camera(World& world, Layermask layermask) {

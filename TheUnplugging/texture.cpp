@@ -35,6 +35,14 @@ void Texture::on_load(World& world) {
 	this->texture_id = texture_id;
 }
 
+Texture* make_Texture(World& world) {
+	ID id = world.make_ID();
+	auto e = world.make<Entity>(id);
+	e->layermask = game_layer;
+	auto texture = world.make<Texture>(id);
+	return texture;
+}
+
 void Texture::bind_to(unsigned int num) {
 	glActiveTexture(GL_TEXTURE0 + num);
 	glBindTexture(GL_TEXTURE_2D, texture_id);
