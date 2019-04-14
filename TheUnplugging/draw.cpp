@@ -24,6 +24,10 @@ DrawCommand::DrawCommand(ID id, glm::mat4* model, AABB* aabb, VertexBuffer* vert
 CommandBuffer::CommandBuffer() {}
 CommandBuffer::~CommandBuffer() {}
 
+unsigned int CommandBuffer::next_texture_index() {
+	return current_texture_index++;
+}
+
 void CommandBuffer::submit(DrawCommand& cmd) {
 	commands.push_back(cmd);
 }
@@ -70,7 +74,7 @@ void switch_shader(World& world, RenderParams& params, ID shader_id, bool instan
 	}
 
 	shader->bind();
-	params.set_shader_scene_params(*shader);
+	params.set_shader_scene_params(*shader, world);
 }
 
 void depth_func_bind(DepthFunc func) {

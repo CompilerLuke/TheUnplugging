@@ -102,7 +102,7 @@ Framebuffer::Framebuffer(World& world, FramebufferSettings& settings) {
 	this->height = settings.height;
 }
 
-void Framebuffer::operator=(Framebuffer&& other) {
+void Framebuffer::operator=(Framebuffer&& other) noexcept {
 	this->fbo = other.fbo;
 	this->rbo = other.rbo;
 	this->width = other.width;

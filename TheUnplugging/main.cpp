@@ -17,6 +17,8 @@
 #include "flyover.h"
 #include "game_time.h"
 #include "texture.h"
+#include "lights.h"
+#include "renderPass.h"
 
 using Velocity = glm::vec3;
 
@@ -40,6 +42,7 @@ int main() {
 	world.add(new Store<Flyover>(1));
 	world.add(new Store<Texture>(10));
 	world.add(new Store<Cubemap>(10));
+	world.add(new Store<DirLight>(2));
 
 	world.add(new CameraSystem());
 	world.add(new FlyOverSystem());
@@ -51,7 +54,9 @@ int main() {
 	auto model = load_Model(world, "HOVERTANK.fbx");
 
 	CommandBuffer cmd_buffer;
-	RenderParams render_params(cmd_buffer);
+	MainPass main_pass(world, window);
+
+	RenderParams render_params(cmd_buffer, main_pass);
 	UpdateParams update_params(input);
 
 	auto model_renderer_id = world.make_ID();

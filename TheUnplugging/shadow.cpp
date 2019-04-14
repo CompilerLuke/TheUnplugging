@@ -10,6 +10,7 @@
 #include "lights.h"
 #include "transform.h"
 #include "primitives.h"
+#include "camera.h"
 
 DepthMap::DepthMap(unsigned int width, unsigned int height, World& world) {
 	Texture* depthMap = make_Texture(world);
@@ -23,14 +24,19 @@ DepthMap::DepthMap(unsigned int width, unsigned int height, World& world) {
 
 	this->depth_map = world.id_of(depthMap);
 	this->depth_map_FBO = Framebuffer(world, settings);
+
+	this->depth_shader = world.id_of(load_Shader(world, "shaders/pbr.vert", "shaders/depth.frag"));
 }
 
 ShadowPass::ShadowPass(Window& window, World& world, ID depth_prepass) :
 	deffered_map_cascade(4096, 4096, world),
 	ping_pong_shadow_mask(window, world),
-	shadow_mask(window, world)
+	shadow_mask(window, world),
+	volumetric(world, window, depth_prepass)
 {
 	this->depth_prepass = depth_prepass;
+	this->screenspace_blur_shader = world.id_of(load_Shader(world, "shaders/screenspace.vert", "shaders/blur.frag"));
+	this->shadow_mask_shader = world.id_of(load_Shader(world, "shaders/screenspace.vert", "shaders/shadowMask.frag"));
 }
 
 ShadowMask::ShadowMask(Window& window, World& world) {
@@ -55,6 +61,10 @@ void ShadowMask::set_shadow_params(Shader& shader, World& world, RenderParams& p
 	auto bind_to = params.command_buffer.next_texture_index();
 	tex->bind_to(bind_to);
 	shader.shadowMaskMap.set_int(bind_to);
+}
+
+void ShadowPass::set_shadow_params(Shader& shader, World& world, RenderParams& params) {
+	this->shadow_mask.set_shadow_params(shader, world, params);
 }
 
 struct OrthoProjInfo {
@@ -170,6 +180,7 @@ void DepthMap::render_maps(World& world, RenderParams& params, glm::mat4 project
 
 	this->depth_map_FBO.clear_depth(glm::vec4(0, 0, 0, 1));
 	
+	new_params.pass = *this;
 	command_buffer.submit_to_gpu(world, new_params);
 
 	this->depth_map_FBO.unbind();
@@ -201,6 +212,8 @@ void ShadowPass::render(World& world, RenderParams& params) {
 	auto shadow_mask_shader = world.by_id<Shader>(this->shadow_mask_shader);
 	auto depth_prepass = world.by_id<Texture>(this->depth_prepass);
 	auto shadow_map = world.by_id<Texture>(this->shadow_mask.shadow_mask_map);
+
+	this->volumetric.clear();
 
 	for (int i = 0; i < num_cascades; i++) {
 		auto& proj_info = info[i];
@@ -234,9 +247,19 @@ void ShadowPass::render(World& world, RenderParams& params) {
 
 		glEnable(GL_DEPTH_TEST);
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		shadow_mask.shadow_mask_map_fbo.unbind();
+
+		//compute volumetric scattering for cascade
+		ShadowParams shadow_params;
+		shadow_params.in_range = in_range;
+		shadow_params.to_light = proj_info.toLight;
+		shadow_params.to_world = proj_info.toWorld;
+		shadow_params.cascade = i;
+
+		volumetric.render_with_cascade(world, params, shadow_params);
 	}
 
+	//render blur
 	bool horizontal = true;
 	bool first_iteration = true;
 
@@ -245,10 +268,35 @@ void ShadowPass::render(World& world, RenderParams& params) {
 	auto blur_shader = world.by_id<Shader>(this->screenspace_blur_shader);
 
 	constexpr int amount = 10;
+
 	for (int i = 0; i < amount; i++) {
 		if (!horizontal) shadow_mask.shadow_mask_map_fbo.bind();
 		else ping_pong_shadow_mask.shadow_mask_map_fbo.bind();
 
 		blur_shader->bind();
+		
+		Texture* bind_to;
+		if (first_iteration)
+			bind_to = world.by_id<Texture>(shadow_mask.shadow_mask_map);
+		else
+			bind_to = world.by_id<Texture>(ping_pong_shadow_mask.shadow_mask_map);
+
+		bind_to->bind_to(0);
+
+		blur_shader->location("image").set_int(0);
+		blur_shader->location("horizontal").set_int(horizontal);
+
+		glm::mat4 m(1.0);
+		blur_shader->location("model").set_mat4(m);
+
+		render_quad();
+
+		horizontal = !horizontal;
+		first_iteration = false;
+		if (first_iteration)
+			first_iteration = false;
 	}
+
+	shadow_mask.shadow_mask_map_fbo.unbind();
+	glEnable(GL_DEPTH_TEST);
 }

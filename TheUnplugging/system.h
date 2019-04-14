@@ -10,7 +10,7 @@ struct RenderParams {
 
 	glm::mat4 projection;
 	glm::mat4 view;
-	Camera* cam;
+	struct Camera* cam;
 
 	unsigned int width = 0;
 	unsigned int height = 0;

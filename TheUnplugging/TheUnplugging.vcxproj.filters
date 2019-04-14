@@ -141,6 +141,15 @@
     <ClCompile Include="shadow.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="volumetric.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="primitives.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="lights.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ecs.h">
@@ -209,9 +218,6 @@
     <ClInclude Include="device.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="renderPass.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="shadow.h">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
@@ -219,6 +225,15 @@
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
     <ClInclude Include="primitives.h">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="volumetric.h">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="pass.h">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="renderPass.h">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
   </ItemGroup>

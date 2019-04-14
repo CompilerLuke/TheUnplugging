@@ -149,12 +149,14 @@
     <ClCompile Include="flyover.cpp" />
     <ClCompile Include="frameBuffer.cpp" />
     <ClCompile Include="input.cpp" />
+    <ClCompile Include="lights.cpp" />
     <ClCompile Include="load_model.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="materialSystem.cpp" />
     <ClCompile Include="mesh.cpp" />
     <ClCompile Include="model.cpp" />
     <ClCompile Include="model_renderer.cpp" />
+    <ClCompile Include="primitives.cpp" />
     <ClCompile Include="renderParams.cpp" />
     <ClCompile Include="renderPass.cpp" />
     <ClCompile Include="shader.cpp" />
@@ -165,6 +167,7 @@
     <ClCompile Include="transforms.cpp" />
     <ClCompile Include="update_params.cpp" />
     <ClCompile Include="vfs.cpp" />
+    <ClCompile Include="volumetric.cpp" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -183,6 +186,7 @@
     <ClInclude Include="lights.h" />
     <ClInclude Include="materialSystem.h" />
     <ClInclude Include="model.h" />
+    <ClInclude Include="pass.h" />
     <ClInclude Include="primitives.h" />
     <ClInclude Include="renderPass.h" />
     <ClInclude Include="shader.h" />
@@ -193,6 +197,7 @@
     <ClInclude Include="texture.h" />
     <ClInclude Include="transform.h" />
     <ClInclude Include="vfs.h" />
+    <ClInclude Include="volumetric.h" />
     <ClInclude Include="window.h" />
   </ItemGroup>
   <ItemGroup>

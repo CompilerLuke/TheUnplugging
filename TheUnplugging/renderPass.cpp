@@ -5,6 +5,8 @@
 #include "frameBuffer.h"
 
 MainPass::MainPass(World& world, Window& window)
+	: depth_prepass(window.width, window.height, world),
+	shadow_pass(window, world, depth_prepass.depth_map)
 {
 	frame_map = world.make_ID();
 
@@ -24,7 +26,7 @@ MainPass::MainPass(World& world, Window& window)
 }
 
 void MainPass::set_shader_params(struct Shader& shader, World& world, RenderParams& params) {
-
+	shadow_pass.set_shadow_params(shader, world, params);
 }
 
 void MainPass::render(World& world, RenderParams& params) {
