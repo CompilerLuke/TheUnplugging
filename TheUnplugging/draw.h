@@ -12,6 +12,11 @@
 enum Cull {Cull_Front, Cull_Back, Cull_None};
 enum DepthFunc {DepthFunc_Less, DepthFunc_Lequal};
 
+constexpr int draw_opaque = 0;
+constexpr int draw_skybox = 1;
+constexpr int draw_transparent = 2;
+constexpr int draw_over = 3;
+
 struct DrawState {
 	Cull cull;
 	DepthFunc depth_func;

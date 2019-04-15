@@ -13,8 +13,8 @@
 #include "camera.h"
 
 DepthMap::DepthMap(unsigned int width, unsigned int height, World& world) {
-	Texture* depthMap = make_Texture(world);
-	AttachmentSettings attachment(world.id_of(depthMap));
+	auto depthMap = world.make_ID();
+	AttachmentSettings attachment(depthMap);
 
 	FramebufferSettings settings;
 	settings.width = width;
@@ -22,7 +22,7 @@ DepthMap::DepthMap(unsigned int width, unsigned int height, World& world) {
 	settings.depth_attachment = &attachment;
 	settings.depth_buffer = DepthComponent24;
 
-	this->depth_map = world.id_of(depthMap);
+	this->depth_map = depthMap;
 	this->depth_map_FBO = Framebuffer(world, settings);
 
 	this->depth_shader = world.id_of(load_Shader(world, "shaders/pbr.vert", "shaders/depth.frag"));
@@ -40,8 +40,8 @@ ShadowPass::ShadowPass(Window& window, World& world, ID depth_prepass) :
 }
 
 ShadowMask::ShadowMask(Window& window, World& world) {
-	Texture* tex = make_Texture(world);
-	AttachmentSettings color_attachment(world.id_of(tex));
+	ID tex = world.make_ID();
+	AttachmentSettings color_attachment(tex);
 	color_attachment.mag_filter = Linear;
 	color_attachment.min_filter = Linear;
 	color_attachment.wrap_s = Repeat;
@@ -53,6 +53,7 @@ ShadowMask::ShadowMask(Window& window, World& world) {
 	settings.color_attachments.push_back(color_attachment);
 	settings.depth_buffer = DepthComponent24;
 
+	this->shadow_mask_map = tex;
 	this->shadow_mask_map_fbo = Framebuffer(world, settings);
 }
 

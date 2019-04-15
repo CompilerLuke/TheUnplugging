@@ -41,14 +41,14 @@ struct ComponentStore {
 	virtual ~ComponentStore() {};
 };
 
-using typeid_t = void const*;
+extern int global_type_id;
+using typeid_t = int;
 
 template <typename T>
 constexpr typeid_t type_id() noexcept
 {
-	static char const type_id;
-
-	return &type_id;
+	static int const type_id = global_type_id++;
+	return type_id;
 }
 
 template<typename T>
@@ -87,10 +87,10 @@ struct Store : ComponentStore {
 		return this->by_id(id);
 	}
 
-	void free_by_id(ID id)  {
+	void free_by_id(ID id) {
 		auto obj_ptr = this->by_id(id);
-		if (obj_ptr == NULL) { 
-			return; 
+		if (obj_ptr == NULL) {
+			return;
 		}
 
 		id_to_obj[id] = NULL;
@@ -127,16 +127,16 @@ struct Entity {
 };
 
 struct World {
-	static constexpr int components_hash_size = 2007;
+	static constexpr int components_hash_size = 100;
 
-	std::unique_ptr<ComponentStore> components[components_hash_size]; 
+	std::unique_ptr<ComponentStore> components[components_hash_size];
 	std::vector<std::unique_ptr<System>> systems;
 	Level level;
 
 	template<typename T>
 	constexpr void add(Store<T>* store) {
 		assert(get<T>() == NULL);
-		components[(size_t)type_id<T>() % components_hash_size] = std::unique_ptr<ComponentStore>(store);
+		components[(size_t)type_id<T>()] = std::unique_ptr<ComponentStore>(store);
 	}
 
 	void add(System* system) {
@@ -145,7 +145,7 @@ struct World {
 
 	template<typename T>
 	constexpr Store<T>* get() {
-		return (Store<T>*)(components[(size_t)type_id<T>() % components_hash_size].get());
+		return (Store<T>*)(components[(size_t)type_id<T>()].get());
 	}
 
 	template<typename T>
@@ -195,8 +195,8 @@ struct World {
 	}
 
 	template <typename... T>
-	typename std::enable_if<(sizeof...(T) == 0), bool>::type 
-	has_component(ID id) {
+	typename std::enable_if<(sizeof...(T) == 0), bool>::type
+		has_component(ID id) {
 		return true;
 	}
 
@@ -207,7 +207,7 @@ struct World {
 
 	template<typename A, typename... Args>
 	typename std::enable_if<(sizeof...(Args) > 0), std::vector <ID> >::type
-	filter(Layermask layermask) {
+		filter(Layermask layermask) {
 		std::vector<ID> ids;
 		Store<Entity>* entity_store = get<Entity>();
 
@@ -241,8 +241,6 @@ struct World {
 		for (int i = 0; i < components_hash_size; i++) {
 			components[i] = NULL;
 		}
-
-		add(new Store<Entity>(10));
 	}
 
 private:

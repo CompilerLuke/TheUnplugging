@@ -31,6 +31,7 @@ struct Param {
 };
 
 Param make_Param_Vec3(Uniform loc, glm::vec3);
+Param make_Param_Cubemap(Uniform loc, ID);
 
 struct Material {
 	std::string name;
@@ -38,5 +39,6 @@ struct Material {
 	std::vector<Param> params;
 	struct DrawState* state;
 };
+
 
 Material* material_by_name(std::vector<Material>&, const std::string&);

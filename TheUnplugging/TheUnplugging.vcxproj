@@ -148,6 +148,7 @@
     <ClCompile Include="ecs.cpp" />
     <ClCompile Include="flyover.cpp" />
     <ClCompile Include="frameBuffer.cpp" />
+    <ClCompile Include="ibl.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="lights.cpp" />
     <ClCompile Include="load_model.cpp" />
@@ -180,6 +181,7 @@
     <ClInclude Include="eventDispatcher.h" />
     <ClInclude Include="flyover.h" />
     <ClInclude Include="frameBuffer.h" />
+    <ClInclude Include="ibl.h" />
     <ClInclude Include="id.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="layermask.h" />

@@ -16,3 +16,11 @@ Param make_Param_Vec3(Uniform loc, glm::vec3 vec) {
 	param.vec3 = vec;
 	return param;
 }
+
+Param make_Param_Cubemap(Uniform loc, ID id) {
+	Param param;
+	param.loc = loc;
+	param.type = Param_Cubemap;
+	param.cubemap = id;
+	return param;
+}

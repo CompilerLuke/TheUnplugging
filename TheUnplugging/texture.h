@@ -14,9 +14,11 @@ struct Texture {
 };
 
 struct Cubemap {
-	TextureID id = 0;
+	std::string filename;
+	TextureID texture_id = 0;
 	void bind_to(unsigned int);
 };
 
 Texture* load_Texture(struct World&, const std::string& filename);
 Texture* make_Texture(struct World&);
+Cubemap* make_Cubemap(struct World&);

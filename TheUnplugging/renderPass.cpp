@@ -37,6 +37,9 @@ void MainPass::render(World& world, RenderParams& params) {
 
 	world.render(params);
 
+	depth_prepass.render_maps(world, params, params.projection, params.view);
+	shadow_pass.render(world, params);
+
 	current_frame.bind();
 	current_frame.clear_color(glm::vec4(0, 0, 0, 1));
 	current_frame.clear_depth(glm::vec4(0, 0, 0, 1));
@@ -46,5 +49,5 @@ void MainPass::render(World& world, RenderParams& params) {
 	current_frame.unbind();
 
 	device.bind();
-
+	shadow_pass.volumetric.render_upsampled(world, frame_map);
 }

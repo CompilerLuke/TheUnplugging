@@ -6,14 +6,14 @@
 struct DrawState default_draw_state = {
 	Cull_None,
 	DepthFunc_Lequal,
-	0,
+	draw_opaque,
 	false
 };
 
 struct DrawState draw_draw_over = {
 	Cull_None,
 	DepthFunc_Lequal,
-	0,
+	draw_over,
 	true
 };
 
@@ -143,11 +143,11 @@ bool operator!=(Material& mat1, Material& mat2) {
 void CommandBuffer::submit_to_gpu(World& world, RenderParams& render_params) {
 	//todo culling
 	for (auto &cmd : commands) {
-		cmd.key = (cmd.material->state->order * (2ll << 35)) 
-			    + (cmd.material->state->depth_func * (2ll << 32))
-			    + (cmd.material->state->cull * (2ll << 30)) 
-			    + (cmd.buffer->vao * (2ll << 15)) 
-			    + (cmd.material->shader * (2ll << 7)) 
+		cmd.key = (cmd.material->state->order << 36) 
+			    + (cmd.material->state->depth_func << 32)
+			    + (cmd.material->state->cull << 30) 
+			    + (cmd.buffer->vao << 15) 
+			    + (cmd.material->shader << 7) 
 			    + ((long long)cmd.material % 64);
 	}
 

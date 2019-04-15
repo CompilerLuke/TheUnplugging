@@ -43,6 +43,14 @@ Texture* make_Texture(World& world) {
 	return texture;
 }
 
+Cubemap* make_Cubemap(World& world) {
+	ID id = world.make_ID();
+	auto e = world.make<Entity>(id);
+	e->layermask = game_layer;
+	auto texture = world.make<Cubemap>(id);
+	return texture;
+}
+
 void Texture::bind_to(unsigned int num) {
 	glActiveTexture(GL_TEXTURE0 + num);
 	glBindTexture(GL_TEXTURE_2D, texture_id);
@@ -50,7 +58,7 @@ void Texture::bind_to(unsigned int num) {
 
 void Cubemap::bind_to(unsigned int num) {
 	glActiveTexture(GL_TEXTURE0 + num);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
 }
 
 Texture* load_Texture(World& world, const std::string& filename) {
@@ -65,3 +73,4 @@ Texture* load_Texture(World& world, const std::string& filename) {
 	texture->on_load(world);
 	return texture;
 }
+

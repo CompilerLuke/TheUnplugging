@@ -19,6 +19,7 @@
 #include "texture.h"
 #include "lights.h"
 #include "renderPass.h"
+#include "ibl.h"
 
 using Velocity = glm::vec3;
 
@@ -32,6 +33,7 @@ int main() {
 
 	World world;
 	world.level.set_level("C:\\Users\\User\\Desktop\\TopCCompiler\\TopCompiler\\Fernix\\assets\\level2\\");
+	world.add(new Store<Entity>(100));
 	world.add(new Store<Velocity>(10));
 	world.add(new Store<Shader>(10));
 	world.add(new Store<Model>(10));
@@ -43,9 +45,11 @@ int main() {
 	world.add(new Store<Texture>(10));
 	world.add(new Store<Cubemap>(10));
 	world.add(new Store<DirLight>(2));
+	world.add(new Store<Skybox>(1));
 
 	world.add(new CameraSystem());
 	world.add(new FlyOverSystem());
+	world.add(new SkyboxSystem(world));
 	world.add(new ModelRendererSystem());
 	world.add(new LocalTransformSystem());
 	

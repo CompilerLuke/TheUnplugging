@@ -9,9 +9,9 @@
 #include "camera.h"
 
 FogMap::FogMap(World& world, unsigned int width, unsigned int height) {
-	auto tex = make_Texture(world);
+	auto tex = world.make_ID();
 	
-	AttachmentSettings color_attachment(world.id_of(tex));
+	AttachmentSettings color_attachment(tex);
 	color_attachment.min_filter = Nearest;
 	color_attachment.mag_filter = Nearest;
 	color_attachment.wrap_s = ClampToBorder;
@@ -24,7 +24,7 @@ FogMap::FogMap(World& world, unsigned int width, unsigned int height) {
 	settings.color_attachments.push_back(color_attachment);
 
 	this->fbo = Framebuffer(world, settings);
-	this->map = world.id_of(tex);
+	this->map = tex;
 }
 
 VolumetricPass::VolumetricPass(World& world, Window& window, ID depth_prepass)

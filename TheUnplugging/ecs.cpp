@@ -1,5 +1,7 @@
 #include "ecs.h"
 
+int global_type_id = 0;
+
 ID World::make_ID() {
 	if (freed_entities.size() > 0) {
 		ID id = freed_entities[freed_entities.size() - 1];

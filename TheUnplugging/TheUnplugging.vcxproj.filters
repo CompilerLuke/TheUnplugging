@@ -150,6 +150,9 @@
     <ClCompile Include="lights.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="ibl.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ecs.h">
@@ -234,6 +237,9 @@
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
     <ClInclude Include="renderPass.h">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="ibl.h">
       <Filter>Header Files\graphics</Filter>
     </ClInclude>
   </ItemGroup>

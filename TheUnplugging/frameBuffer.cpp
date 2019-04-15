@@ -4,24 +4,29 @@
 
 GLenum to_opengl(InternalColorFormat format) {
 	if (format == Rgb16f) return GL_RGB16F;
+	return 0;
 }
 
 GLenum to_opengl(ColorFormat format) {
 	if (format == Rgb) return GL_RGB;
+	return 0;
 }
 
 GLenum to_opengl(TexelType format) {
 	if (format == Float_Texel) return GL_FLOAT;
+	return 0;
 }
 
 GLenum to_opengl(Filter filter) {
 	if (filter == Nearest) return GL_NEAREST;
 	if (filter == Linear) return GL_LINEAR;
+	return 0;
 }
 
 GLenum to_opengl(Wrap wrap) {
 	if (wrap == ClampToBorder) return GL_CLAMP_TO_BORDER;
 	if (wrap == Repeat) return GL_REPEAT;
+	return 0;
 }
 
 AttachmentSettings::AttachmentSettings(ID id) {
@@ -102,7 +107,7 @@ Framebuffer::Framebuffer(World& world, FramebufferSettings& settings) {
 	this->height = settings.height;
 }
 
-void Framebuffer::operator=(Framebuffer&& other) noexcept {
+void Framebuffer::operator=(Framebuffer&& other) noexcept{
 	this->fbo = other.fbo;
 	this->rbo = other.rbo;
 	this->width = other.width;
