@@ -38,6 +38,7 @@ struct Component {
 };
 
 struct ComponentStore {
+	virtual void free_by_id(ID) {};
 	virtual ~ComponentStore() {};
 };
 
@@ -89,9 +90,9 @@ struct Store : ComponentStore {
 
 	void free_by_id(ID id) {
 		auto obj_ptr = this->by_id(id);
-		if (obj_ptr == NULL) {
-			return;
-		}
+		if (!obj_ptr) return;
+
+		obj_ptr->~T();
 
 		id_to_obj[id] = NULL;
 		auto slot = (Slot<T>*) obj_ptr;
@@ -159,6 +160,14 @@ struct World {
 	template<typename T>
 	void free_by_id(ID id) {
 		this->get<T>()->free_by_id(id);
+	}
+
+	template<>
+	void free_by_id<Entity>(ID id) {
+		for (int i = 0; i < components_hash_size; i++) {
+			if (components[i] == NULL) continue;
+			components[i]->free_by_id(id);
+		}
 		this->free_ID(id);
 	}
 

@@ -162,6 +162,9 @@
     <ClCompile Include="reflection.cpp">
       <Filter>Source Files\reflection</Filter>
     </ClCompile>
+    <ClCompile Include="physics.cpp">
+      <Filter>Source Files\physics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ecs.h">

@@ -12,6 +12,14 @@
 #include "transform.h"
 #include <iostream>
 
+REFLECT_STRUCT_BEGIN(Skybox)
+REFLECT_STRUCT_MEMBER(filename)
+REFLECT_STRUCT_MEMBER(env_cubemap)
+REFLECT_STRUCT_MEMBER(irradiance_cubemap)
+REFLECT_STRUCT_MEMBER(prefilter_cubemap)
+REFLECT_STRUCT_MEMBER(brdf_LUT)
+REFLECT_STRUCT_END()
+
 struct DrawState skybox_draw_state = {
 	Cull_None,
 	DepthFunc_Lequal,

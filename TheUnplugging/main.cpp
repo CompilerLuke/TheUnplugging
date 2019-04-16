@@ -21,15 +21,15 @@
 #include "renderPass.h"
 #include "ibl.h"
 #include "reflection.h"
+#include "physics.h"
 
 struct Hey {
-	std::vector<glm::vec3> position;
-
+	bool say_hey = false;
 	REFLECT()
 };
 
 REFLECT_STRUCT_BEGIN(Hey)
-REFLECT_STRUCT_MEMBER(position)
+REFLECT_STRUCT_MEMBER(say_hey)
 REFLECT_STRUCT_END()
 
 int main() {
@@ -55,8 +55,15 @@ int main() {
 	world.add(new Store<Cubemap>(10));
 	world.add(new Store<DirLight>(2));
 	world.add(new Store<Skybox>(1));
+	
+	world.add(new Store<CapsuleCollider>(10));
+	world.add(new Store<SphereCollider>(10));
+	world.add(new Store<BoxCollider>(10));
+	world.add(new Store<PlaneCollider>(10));
+	world.add(new Store<RigidBody>(10));
 
 	world.add(new CameraSystem());
+	world.add(new PhysicsSystem());
 	world.add(new FlyOverSystem());
 	world.add(new ModelRendererSystem());
 	world.add(new LocalTransformSystem());
@@ -95,7 +102,6 @@ int main() {
 		auto camera = world.make <Camera>(id);
 		auto flyover = world.make<Flyover>(id);
 		auto hey = world.make<Hey>(id);
-		hey->position.push_back(glm::vec3(1.0));
 
 		auto typeDesc = reflect::TypeResolver<Hey>::get();
 		typeDesc->dump(hey);

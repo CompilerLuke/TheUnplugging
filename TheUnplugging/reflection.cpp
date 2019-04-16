@@ -1,26 +1,32 @@
 #include "reflection.h"
 #include <glm/vec3.hpp>
 
+#define PRIMITIVE_TYPE_DESCRIPTOR(type) \
+struct TypeDescriptor_##type : TypeDescriptor { \
+	TypeDescriptor_##type() : TypeDescriptor{ #type , sizeof(type) } {}; \
+	virtual void dump(const void* obj, int) const override { \
+		std::cout << *(const type*)obj << std::endl; \
+	} \
+}; \
+\
+template<> \
+TypeDescriptor* getPrimitiveDescriptor<type>() { \
+	static TypeDescriptor_##type typeDesc; \
+	return &typeDesc;  \
+} 
+
 namespace reflect {
 
 	//--------------------------------------------------------
 	// A type descriptor for int
 	//--------------------------------------------------------
 
-	struct TypeDescriptor_Int : TypeDescriptor {
-		TypeDescriptor_Int() : TypeDescriptor{ "int", sizeof(int) } {
-		}
-		virtual void dump(const void* obj, int /* unused */) const override {
-			std::cout << "int{" << *(const int*)obj << "}";
-		}
-	};
-
-	template <>
-	TypeDescriptor* getPrimitiveDescriptor<int>() {
-		static TypeDescriptor_Int typeDesc;
-		return &typeDesc;
-	}
-
+	PRIMITIVE_TYPE_DESCRIPTOR(float);
+	PRIMITIVE_TYPE_DESCRIPTOR(bool);
+	PRIMITIVE_TYPE_DESCRIPTOR(int);
+	
+	using UINT = unsigned int;
+	PRIMITIVE_TYPE_DESCRIPTOR(UINT);
 	//--------------------------------------------------------
 	// A type descriptor for std::string
 	//--------------------------------------------------------

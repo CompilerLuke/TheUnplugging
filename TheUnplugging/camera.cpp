@@ -2,6 +2,12 @@
 #include "transform.h"
 #include <glm/gtc/matrix_transform.hpp>
 
+REFLECT_STRUCT_BEGIN(Camera)
+REFLECT_STRUCT_MEMBER(near_plane)
+REFLECT_STRUCT_MEMBER(far_plane)
+REFLECT_STRUCT_MEMBER(fov)
+REFLECT_STRUCT_END()
+
 void Camera::update_matrices(World& world, RenderParams& params) {
 	auto transform = world.by_id<Transform>(world.id_of(this));
 
