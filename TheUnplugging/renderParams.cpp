@@ -9,6 +9,7 @@ void RenderParams::set_shader_scene_params(Shader& shader, World& world) {
 
 RenderParams::RenderParams(CommandBuffer& command_buffer, Pass& pass) : 
 	command_buffer(command_buffer),
+	cam(NULL),
 	pass(pass) {
 
 }

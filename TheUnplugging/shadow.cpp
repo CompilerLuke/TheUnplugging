@@ -33,10 +33,10 @@ ShadowPass::ShadowPass(Window& window, World& world, ID depth_prepass) :
 	ping_pong_shadow_mask(window, world),
 	shadow_mask(window, world),
 	volumetric(world, window, depth_prepass),
-	depth_prepass(depth_prepass)
+	depth_prepass(depth_prepass),
+	screenspace_blur_shader(world.id_of(load_Shader(world, "shaders/screenspace.vert", "shaders/blur.frag"))),
+	shadow_mask_shader(world.id_of(load_Shader(world, "shaders/screenspace.vert", "shaders/shadowMask.frag")))
 {
-	this->screenspace_blur_shader = world.id_of(load_Shader(world, "shaders/screenspace.vert", "shaders/blur.frag"));
-	this->shadow_mask_shader = world.id_of(load_Shader(world, "shaders/screenspace.vert", "shaders/shadowMask.frag"));
 }
 
 ShadowMask::ShadowMask(Window& window, World& world) {

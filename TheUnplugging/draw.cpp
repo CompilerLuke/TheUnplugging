@@ -210,7 +210,7 @@ void CommandBuffer::submit_to_gpu(World& world, RenderParams& render_params) {
 				glClear(GL_DEPTH_BUFFER_BIT);
 			}
 
-			if (mat != last_mat || last_was_instanced != instanced) {
+			if ((mat != last_mat) || (last_was_instanced != instanced)) {
 				set_params(*this, mat, world);
 			}
 		}
