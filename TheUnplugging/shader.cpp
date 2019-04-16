@@ -114,6 +114,8 @@ void Shader::load_in_place(World& world) {
 	this->viewPos = this->location("viewPos");
 	this->dirLight_color = this->location("dirLight.direction");
 	this->dirLight_direction = this->location("dirLight.color");
+	
+	this->shadowMaskMap = this->location("shadowMaskMap");
 
 	this->v_time_modified = world.level.time_modified(v_filename);
 	this->f_time_modified = world.level.time_modified(f_filename);
@@ -132,9 +134,10 @@ Uniform Shader::location(const std::string& name) {
 	return Uniform(name, glGetUniformLocation(id, name.c_str()));
 }
 
-Uniform::Uniform(const std::string& name, int id) {
-	this->name = name;
-	this->id = id;
+Uniform::Uniform(const std::string& name, int id) :
+	name(name),
+	id(id)
+{
 }
 
 void Uniform::set_mat4(glm::mat4& value) {

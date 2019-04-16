@@ -17,7 +17,7 @@ TemporaryAllocator::TemporaryAllocator(size_t max_size) {
 }
 
 TemporaryAllocator::~TemporaryAllocator() {
-	delete this->memory;
+	delete[] this->memory;
 }
 
 

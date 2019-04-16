@@ -74,6 +74,7 @@ void switch_shader(World& world, RenderParams& params, ID shader_id, bool instan
 	}
 
 	shader->bind();
+	params.command_buffer.current_texture_index = 0;
 	params.set_shader_scene_params(*shader, world);
 }
 
@@ -121,12 +122,26 @@ void set_params(CommandBuffer& command_buffer, Material& mat, World& world) {
 			param.loc.set_mat4(param.matrix); 
 			break;
 
-		case Param_Image: //todo image
-			break;
+		case Param_Image: {
+			auto tex = world.by_id<Texture>(param.image);
+			if (!tex) continue;
 
-		case Param_Cubemap: //todo image
+			auto index = command_buffer.next_texture_index();
+			tex->bind_to(index);
+			param.loc.set_int(index);
 			break;
+		}
+		case Param_Cubemap: {
+			auto tex = world.by_id<Cubemap>(param.cubemap);
+			if (!tex) continue;
 
+			auto index = command_buffer.next_texture_index();
+
+
+			tex->bind_to(index);
+			param.loc.set_int(index);
+			break;
+		}
 		case Param_Int:
 			param.loc.set_int(param.integer);
 			break;
@@ -164,15 +179,18 @@ void CommandBuffer::submit_to_gpu(World& world, RenderParams& render_params) {
 		if (i == 0) {
 			switch_shader(world, render_params, mat.shader, instanced);
 			cmd.buffer->bind();
-			//depth_func_bind(mat.state->depth_func);
-			//cull_bind(mat.state->cull);
+			depth_func_bind(mat.state->depth_func);
+			cull_bind(mat.state->cull);
+			if (mat.state->clear_depth_buffer) {
+				glClear(GL_DEPTH_BUFFER_BIT);
+			}
 			set_params(*this, mat, world);
 		}
 		else {
 			auto& last_cmd = commands[i - 1];
 			auto& last_mat = *last_cmd.material;
 
-			if (last_mat.shader != mat.shader || last_was_instanced) {
+			if ((last_mat.shader != mat.shader) || last_was_instanced) {
 				switch_shader(world, render_params, mat.shader, instanced);
 			}
 

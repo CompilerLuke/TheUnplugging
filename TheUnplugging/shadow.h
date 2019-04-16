@@ -9,8 +9,6 @@ struct DepthMap : Pass {
 
 	ID depth_map;
 	Framebuffer depth_map_FBO;
-	unsigned int width;
-	unsigned int height;
 
 	void set_shader_params(struct Shader&, struct World&, struct RenderParams&) override {};
 

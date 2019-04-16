@@ -9,6 +9,8 @@ struct TemporaryAllocator {
 
 	char* memory;
 
+	TemporaryAllocator(const TemporaryAllocator&) = delete;
+
 	TemporaryAllocator(size_t);
 	~TemporaryAllocator();
 

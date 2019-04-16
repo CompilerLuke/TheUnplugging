@@ -29,9 +29,8 @@ GLenum to_opengl(Wrap wrap) {
 	return 0;
 }
 
-AttachmentSettings::AttachmentSettings(ID id) {
-	this->tex_id = id;
-}
+AttachmentSettings::AttachmentSettings(ID id) 
+: tex_id(id) {}
 
 void set_texture_settings(World& world, AttachmentSettings& self, unsigned int tex) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, to_opengl(self.min_filter));
@@ -99,7 +98,7 @@ Framebuffer::Framebuffer(World& world, FramebufferSettings& settings) {
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glBindRenderbuffer(GL_FRAMEBUFFER, 0);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
 	this->fbo = fbo;
 	this->rbo = rbo;

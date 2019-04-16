@@ -3,13 +3,14 @@
 #include "window.h"
 #include "draw.h"
 #include "frameBuffer.h"
+#include "lights.h"
+#include "ibl.h"
 
 MainPass::MainPass(World& world, Window& window)
 	: depth_prepass(window.width, window.height, world),
-	shadow_pass(window, world, depth_prepass.depth_map)
+	shadow_pass(window, world, depth_prepass.depth_map),
+	frame_map(world.make_ID())
 {
-	frame_map = world.make_ID();
-
 	AttachmentSettings attachment(frame_map);
 	FramebufferSettings settings;
 	settings.width = window.width;
@@ -26,7 +27,16 @@ MainPass::MainPass(World& world, Window& window)
 }
 
 void MainPass::set_shader_params(struct Shader& shader, World& world, RenderParams& params) {
+	shader.projection.set_mat4(params.projection);
+	shader.view.set_mat4(params.view);
+
 	shadow_pass.set_shadow_params(shader, world, params);
+	
+	if (params.skybox) params.skybox->set_ibl_params(shader, world, params);
+	if (params.dir_light) {
+		shader.dirLight_direction.set_vec3(params.dir_light->direction);
+		shader.dirLight_color.set_vec3(params.dir_light->color);
+	}
 }
 
 void MainPass::render(World& world, RenderParams& params) {

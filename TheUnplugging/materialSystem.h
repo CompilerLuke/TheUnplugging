@@ -30,8 +30,8 @@ struct Param {
 	Param();
 };
 
-Param make_Param_Vec3(Uniform loc, glm::vec3);
-Param make_Param_Cubemap(Uniform loc, ID);
+Param make_Param_Vec3(const Uniform& loc, glm::vec3);
+Param make_Param_Cubemap(const Uniform& loc, ID);
 
 struct Material {
 	std::string name;

@@ -7,10 +7,12 @@ struct RenderParams {
 	Layermask layermask;
 	struct CommandBuffer& command_buffer;
 	struct Pass& pass;
+	struct Skybox* skybox;
+	struct DirLight* dir_light;
 
 	glm::mat4 projection;
 	glm::mat4 view;
-	struct Camera* cam;
+	struct Camera* cam = NULL;
 
 	unsigned int width = 0;
 	unsigned int height = 0;

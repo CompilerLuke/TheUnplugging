@@ -9,7 +9,7 @@ Material* material_by_name(std::vector<Material>& materials, const std::string& 
 
 Param::Param() {};
 
-Param make_Param_Vec3(Uniform loc, glm::vec3 vec) {
+Param make_Param_Vec3(const Uniform& loc, glm::vec3 vec) {
 	Param param;
 	param.loc = loc;
 	param.type = Param_Vec3;
@@ -17,7 +17,7 @@ Param make_Param_Vec3(Uniform loc, glm::vec3 vec) {
 	return param;
 }
 
-Param make_Param_Cubemap(Uniform loc, ID id) {
+Param make_Param_Cubemap(const Uniform& loc, ID id) {
 	Param param;
 	param.loc = loc;
 	param.type = Param_Cubemap;

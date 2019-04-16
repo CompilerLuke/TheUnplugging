@@ -20,8 +20,17 @@
 #include "lights.h"
 #include "renderPass.h"
 #include "ibl.h"
+#include "reflection.h"
 
-using Velocity = glm::vec3;
+struct Hey {
+	std::vector<glm::vec3> position;
+
+	REFLECT()
+};
+
+REFLECT_STRUCT_BEGIN(Hey)
+REFLECT_STRUCT_MEMBER(position)
+REFLECT_STRUCT_END()
 
 int main() {
 	Window window;
@@ -34,28 +43,35 @@ int main() {
 	World world;
 	world.level.set_level("C:\\Users\\User\\Desktop\\TopCCompiler\\TopCompiler\\Fernix\\assets\\level2\\");
 	world.add(new Store<Entity>(100));
-	world.add(new Store<Velocity>(10));
-	world.add(new Store<Shader>(10));
+	world.add(new Store<Hey>(10));
+	world.add(new Store<Shader>(20));
 	world.add(new Store<Model>(10));
 	world.add(new Store<ModelRenderer>(10));
 	world.add(new Store<Transform>(10));
 	world.add(new Store<LocalTransform>(10));
 	world.add(new Store<Camera>(3));
 	world.add(new Store<Flyover>(1));
-	world.add(new Store<Texture>(10));
+	world.add(new Store<Texture>(20));
 	world.add(new Store<Cubemap>(10));
 	world.add(new Store<DirLight>(2));
 	world.add(new Store<Skybox>(1));
 
 	world.add(new CameraSystem());
 	world.add(new FlyOverSystem());
-	world.add(new SkyboxSystem(world));
 	world.add(new ModelRendererSystem());
 	world.add(new LocalTransformSystem());
 	
 	auto shader = load_Shader(world, "shaders/pbr.vert", "shaders/gizmo.frag");
 	auto texture = load_Texture(world, "normal.jpg");
 	auto model = load_Model(world, "HOVERTANK.fbx");
+	auto skybox = load_Skybox(world, "Tropical_Beach_3k.hdr");
+
+	{
+		auto id = world.make_ID();
+		auto e = world.make<Entity>(id);
+		auto trans = world.make<Transform>(id);
+		auto dir_light = world.make<DirLight>(id);
+	}
 
 	CommandBuffer cmd_buffer;
 	MainPass main_pass(world, window);
@@ -78,6 +94,11 @@ int main() {
 		auto trans = world.make<Transform>(id);
 		auto camera = world.make <Camera>(id);
 		auto flyover = world.make<Flyover>(id);
+		auto hey = world.make<Hey>(id);
+		hey->position.push_back(glm::vec3(1.0));
+
+		auto typeDesc = reflect::TypeResolver<Hey>::get();
+		typeDesc->dump(hey);
 	}
 
 	std::vector<Param> params = {
@@ -111,10 +132,13 @@ int main() {
 		render_params.layermask = game_layer;
 		render_params.width = window.width;
 		render_params.height = window.height;
+		render_params.dir_light = get_dir_light(world, render_params.layermask);
+		render_params.skybox = skybox;
 
 		world.update(update_params);
 		world.render(render_params);
 
+		glViewport(0, 0, render_params.width, render_params.height);
 		glClearColor(0.0, 0.0, 0.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

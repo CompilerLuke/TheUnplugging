@@ -28,11 +28,11 @@ FogMap::FogMap(World& world, unsigned int width, unsigned int height) {
 }
 
 VolumetricPass::VolumetricPass(World& world, Window& window, ID depth_prepass)
-	: calc_fog(world, window.width / 2.0f, window.height / 2.0f)
+	: calc_fog(world, window.width / 2.0f, window.height / 2.0f),
+	  depth_prepass(depth_prepass),
+	  volume_shader(world.id_of(load_Shader(world, "shaders/screenspace.vert", "shaders/volumetric.frag"))),
+	  upsample_shader(world.id_of(load_Shader(world, "shaders/screenspace.vert", "shaders/volumetric_upsample.frag")))
 {
-	this->depth_prepass = depth_prepass;
-	this->volume_shader = world.id_of(load_Shader(world, "shaders/screenspace.vert", "shaders/volumetric.frag"));
-	this->upsample_shader = world.id_of(load_Shader(world, "shaders/screenspace.vert", "shaders/volumetric.frag"));
 }
 
 void VolumetricPass::clear() {

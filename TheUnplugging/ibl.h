@@ -16,10 +16,4 @@ struct Skybox {
 	void set_ibl_params(struct Shader&, struct World&, RenderParams&);
 };
 
-struct SkyboxSystem : System {
-	ID skybox_shader;
-	ID cube;
-
-	SkyboxSystem(World&);
-	void render(struct World&, RenderParams&) override;
-};
+Skybox* load_Skybox(struct World&, const std::string&);

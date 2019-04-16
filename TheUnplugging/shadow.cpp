@@ -32,9 +32,9 @@ ShadowPass::ShadowPass(Window& window, World& world, ID depth_prepass) :
 	deffered_map_cascade(4096, 4096, world),
 	ping_pong_shadow_mask(window, world),
 	shadow_mask(window, world),
-	volumetric(world, window, depth_prepass)
+	volumetric(world, window, depth_prepass),
+	depth_prepass(depth_prepass)
 {
-	this->depth_prepass = depth_prepass;
 	this->screenspace_blur_shader = world.id_of(load_Shader(world, "shaders/screenspace.vert", "shaders/blur.frag"));
 	this->shadow_mask_shader = world.id_of(load_Shader(world, "shaders/screenspace.vert", "shaders/shadowMask.frag"));
 }
@@ -99,18 +99,6 @@ void calc_ortho_proj(RenderParams& params, glm::mat4& light_m, float width, floa
 			cascadeEnd[i],
 			cascadeEnd[i + 1]
 		);
-
-		glm::vec4 frustumCorners[8] = {
-			glm::vec4(1,1,1,1),
-			glm::vec4(-1,1, 1,1),
-			glm::vec4(1,-1,1,1),
-			glm::vec4(-1,-1,1,1),
-
-			glm::vec4(1,1,-1,1),
-			glm::vec4(-1,1,-1,1),
-			glm::vec4(1,-1,-1,1),
-			glm::vec4(-1,-1,-1,1)
-		};
 
 		auto frust_to_world = glm::inverse(proj * cam_m);
 
@@ -199,8 +187,8 @@ void ShadowPass::render(World& world, RenderParams& params) {
 	view_matrix = glm::translate(view_matrix, -dir_light_trans->position);
 	view_matrix = view_matrix * glm::mat4_cast(dir_light_trans->rotation);
 
-	auto width = this->deffered_map_cascade.width;
-	auto height = this->deffered_map_cascade.height;
+	auto width = this->deffered_map_cascade.depth_map_FBO.width;
+	auto height = this->deffered_map_cascade.depth_map_FBO.height;
 
 	OrthoProjInfo info[num_cascades];
 	calc_ortho_proj(params, view_matrix, width, height, info);
@@ -294,8 +282,6 @@ void ShadowPass::render(World& world, RenderParams& params) {
 
 		horizontal = !horizontal;
 		first_iteration = false;
-		if (first_iteration)
-			first_iteration = false;
 	}
 
 	shadow_mask.shadow_mask_map_fbo.unbind();
