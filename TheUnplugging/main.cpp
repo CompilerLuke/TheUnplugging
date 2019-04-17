@@ -23,15 +23,6 @@
 #include "reflection.h"
 #include "physics.h"
 
-struct Hey {
-	bool say_hey = false;
-	REFLECT()
-};
-
-REFLECT_STRUCT_BEGIN(Hey)
-REFLECT_STRUCT_MEMBER(say_hey)
-REFLECT_STRUCT_END()
-
 int main() {
 	Window window;
 	window.title = "The Unplugging";
@@ -43,7 +34,6 @@ int main() {
 	World world;
 	world.level.set_level("C:\\Users\\User\\Desktop\\TopCCompiler\\TopCompiler\\Fernix\\assets\\level2\\");
 	world.add(new Store<Entity>(100));
-	world.add(new Store<Hey>(10));
 	world.add(new Store<Shader>(20));
 	world.add(new Store<Model>(10));
 	world.add(new Store<ModelRenderer>(10));
@@ -101,10 +91,9 @@ int main() {
 		auto trans = world.make<Transform>(id);
 		auto camera = world.make <Camera>(id);
 		auto flyover = world.make<Flyover>(id);
-		auto hey = world.make<Hey>(id);
 
-		auto typeDesc = reflect::TypeResolver<Hey>::get();
-		typeDesc->dump(hey);
+		auto typeDesc = reflect::TypeResolver<Entity>::get();
+		typeDesc->dump(e);
 	}
 
 	std::vector<Param> params = {

@@ -3,6 +3,11 @@
 #include "transform.h"
 #include <iostream>
 
+REFLECT_STRUCT_BEGIN(Flyover)
+REFLECT_STRUCT_MEMBER(mouse_sensitivity)
+REFLECT_STRUCT_MEMBER(movement_speed)
+REFLECT_STRUCT_END()
+
 float get_speed(Flyover& self, UpdateParams& params) {
 	if (params.input.key_down(GLFW_KEY_LEFT_SHIFT))
 		return self.movement_speed * 2.0f * params.delta_time;

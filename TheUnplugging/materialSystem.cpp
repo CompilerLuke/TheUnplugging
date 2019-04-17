@@ -1,5 +1,22 @@
 #include "materialSystem.h"
 
+REFLECT_UNION_BEGIN(Param)
+REFLECT_UNION_FIELD(loc)
+REFLECT_UNION_CASE(vec3)
+REFLECT_UNION_CASE(vec2)
+REFLECT_UNION_CASE(matrix)
+REFLECT_UNION_CASE(image)
+REFLECT_UNION_CASE(cubemap)
+REFLECT_UNION_CASE(integer)
+REFLECT_UNION_END()
+
+REFLECT_STRUCT_BEGIN(Material)
+REFLECT_STRUCT_MEMBER(name)
+REFLECT_STRUCT_MEMBER(shader)
+REFLECT_STRUCT_MEMBER(params)
+REFLECT_STRUCT_MEMBER(state)
+REFLECT_STRUCT_END()
+
 Material* material_by_name(std::vector<Material>& materials, const std::string& name) {
 	for (int i = 0; i < materials.size(); i++) {
 		if (materials[i].name == name) return &materials[i];

@@ -8,6 +8,7 @@
 #include "temporary.h"
 #include <unordered_map>
 #include "ecs.h"
+#include "reflection.h"
 
 enum Cull {Cull_Front, Cull_Back, Cull_None};
 enum DepthFunc {DepthFunc_Less, DepthFunc_Lequal};
@@ -17,14 +18,16 @@ constexpr int draw_skybox = 1;
 constexpr int draw_transparent = 2;
 constexpr int draw_over = 3;
 
-struct DrawState {
+struct DrawCommandState {
 	Cull cull;
 	DepthFunc depth_func;
 	bool clear_depth_buffer;
 	unsigned int order;
+
+	REFLECT()
 };
 
-extern struct DrawState default_draw_state;
+extern DrawCommandState default_draw_state;
 
 #include "materialSystem.h"
 
@@ -36,7 +39,7 @@ struct DrawCommand {
 	glm::mat4* model_m;
 	AABB* aabb;
 	VertexBuffer* buffer;
-	Material* material;
+	struct Material* material;
 
 	DrawCommand(ID, glm::mat4*, AABB*, VertexBuffer*, Material*);
 };

@@ -20,7 +20,7 @@ REFLECT_STRUCT_MEMBER(prefilter_cubemap)
 REFLECT_STRUCT_MEMBER(brdf_LUT)
 REFLECT_STRUCT_END()
 
-struct DrawState skybox_draw_state = {
+struct DrawCommandState skybox_draw_state = {
 	Cull_None,
 	DepthFunc_Lequal,
 	false,

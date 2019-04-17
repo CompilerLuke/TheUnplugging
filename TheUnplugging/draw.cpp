@@ -1,20 +1,31 @@
 #include "draw.h"
 #include <glad/glad.h>
 #include <algorithm>
+
+REFLECT_ENUM(Cull)
+REFLECT_ENUM(DepthFunc)
+
+REFLECT_STRUCT_BEGIN(DrawCommandState)
+REFLECT_STRUCT_MEMBER(cull)
+REFLECT_STRUCT_MEMBER(depth_func)
+REFLECT_STRUCT_MEMBER(clear_depth_buffer)
+REFLECT_STRUCT_MEMBER(order)
+REFLECT_STRUCT_END()
+
 #include "texture.h"
 
-struct DrawState default_draw_state = {
+DrawCommandState default_draw_state = {
 	Cull_None,
 	DepthFunc_Lequal,
-	draw_opaque,
-	false
+	true,
+	draw_opaque
 };
 
-struct DrawState draw_draw_over = {
+DrawCommandState draw_draw_over = {
 	Cull_None,
 	DepthFunc_Lequal,
+	true,
 	draw_over,
-	true
 };
 
 DrawCommand::DrawCommand(ID id, glm::mat4* model, AABB* aabb, VertexBuffer* vertex_buffer, Material* material) :
@@ -158,8 +169,8 @@ bool operator!=(Material& mat1, Material& mat2) {
 void CommandBuffer::submit_to_gpu(World& world, RenderParams& render_params) {
 	//todo culling
 	for (auto &cmd : commands) {
-		cmd.key = (cmd.material->state->order << 36) 
-			    + (cmd.material->state->depth_func << 32)
+		cmd.key = ((long long)cmd.material->state->order << 36) 
+			    + ((long long)cmd.material->state->depth_func << 32)
 			    + (cmd.material->state->cull << 30) 
 			    + (cmd.buffer->vao << 15) 
 			    + (cmd.material->shader << 7) 

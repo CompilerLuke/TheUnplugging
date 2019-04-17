@@ -1,5 +1,11 @@
 #include "model.h"
 
+REFLECT_STRUCT_BEGIN(Model)
+REFLECT_STRUCT_MEMBER(path)
+REFLECT_STRUCT_MEMBER(meshes)
+REFLECT_STRUCT_MEMBER(materials)
+REFLECT_STRUCT_END()
+
 void Model::on_load(World& world) {
 	for (auto& mesh : meshes) {
 		mesh.submit();

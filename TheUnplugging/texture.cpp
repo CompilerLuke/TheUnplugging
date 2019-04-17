@@ -3,6 +3,14 @@
 #include "ecs.h"
 #include "glad/glad.h"
 
+REFLECT_STRUCT_BEGIN(Texture)
+REFLECT_STRUCT_MEMBER(filename)
+REFLECT_STRUCT_END()
+
+REFLECT_STRUCT_BEGIN(Cubemap)
+REFLECT_STRUCT_MEMBER(filename)
+REFLECT_STRUCT_END()
+
 void Texture::on_load(World& world) {
 	auto real_filename = world.level.asset_path(filename);
 

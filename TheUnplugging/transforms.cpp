@@ -2,6 +2,19 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+REFLECT_STRUCT_BEGIN(Transform)
+REFLECT_STRUCT_MEMBER(position)
+REFLECT_STRUCT_MEMBER(rotation)
+REFLECT_STRUCT_MEMBER(scale)
+REFLECT_STRUCT_END()
+
+REFLECT_STRUCT_BEGIN(LocalTransform)
+REFLECT_STRUCT_MEMBER(position)
+REFLECT_STRUCT_MEMBER(rotation)
+REFLECT_STRUCT_MEMBER(scale)
+REFLECT_STRUCT_MEMBER(owner)
+REFLECT_STRUCT_END()
+
 glm::mat4 Transform::compute_model_matrix() {
 	glm::mat4 trans(1.0f);
 	trans = glm::translate(trans, this->position);

@@ -1,5 +1,13 @@
 #include "ecs.h"
 
+//REFLECT_ALIAS(ID, unsigned int) requires strong typedef
+//REFLECT_ALIAS(Layermask, unsigned int) requires strong typedef
+
+REFLECT_STRUCT_BEGIN(Entity)
+REFLECT_STRUCT_MEMBER(enabled)
+REFLECT_STRUCT_MEMBER(layermask)
+REFLECT_STRUCT_END()
+
 int global_type_id = 0;
 
 ID World::make_ID() {

@@ -4,22 +4,27 @@
 #include "system.h"
 #include <glm/vec3.hpp>
 #include "BtWrapper.h"
+#include "reflection.h"
 
 struct CapsuleCollider {
 	float radius;
 	float height;
+	REFLECT()
 };
 
 struct SphereCollider {
 	float radius;
+	REFLECT()
 };
 
 struct BoxCollider {
 	glm::vec3 scale;
+	REFLECT()
 };
 
 struct PlaneCollider {
 	glm::vec3 normal;
+	REFLECT()
 };
 
 struct RigidBody {
@@ -35,6 +40,7 @@ struct RigidBody {
 	bool continous = false;
 
 	struct btRigidBody* bt_rigid_body = NULL;
+	REFLECT()
 };
 
 struct PhysicsSystem : System {

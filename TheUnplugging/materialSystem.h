@@ -5,6 +5,8 @@
 #include <glm/vec2.hpp>
 #include <glm/mat4x4.hpp>
 #include "id.h"
+#include "reflection.h"
+#include "draw.h"
 
 enum Param_Type {
 	Param_Vec3,
@@ -28,6 +30,8 @@ struct Param {
 	};
 
 	Param();
+
+	REFLECT_UNION()
 };
 
 Param make_Param_Vec3(const Uniform& loc, glm::vec3);
@@ -37,7 +41,9 @@ struct Material {
 	std::string name;
 	ID shader;
 	std::vector<Param> params;
-	struct DrawState* state;
+	DrawCommandState* state;
+
+	REFLECT()
 };
 
 

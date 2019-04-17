@@ -2,6 +2,12 @@
 #include "transform.h"
 #include "temporary.h"
 
+REFLECT_STRUCT_BEGIN(ModelRenderer)
+REFLECT_STRUCT_MEMBER(visible)
+REFLECT_STRUCT_MEMBER(model_id)
+REFLECT_STRUCT_MEMBER(materials)
+REFLECT_STRUCT_END()
+
 void ModelRendererSystem::render(World& world, RenderParams& params) {
 	for (ID id : world.filter<ModelRenderer, Transform>(params.layermask)) {
 		auto transform = world.by_id<Transform>(id);

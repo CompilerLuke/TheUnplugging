@@ -3,6 +3,20 @@
 #include "temporary.h"
 #include "draw.h"
 
+REFLECT_STRUCT_BEGIN(Vertex)
+REFLECT_STRUCT_MEMBER(position)
+REFLECT_STRUCT_MEMBER(normal)
+REFLECT_STRUCT_MEMBER(tex_coord)
+REFLECT_STRUCT_MEMBER(tangent)
+REFLECT_STRUCT_MEMBER(bitangent)
+REFLECT_STRUCT_END()
+
+REFLECT_STRUCT_BEGIN(Mesh)
+REFLECT_STRUCT_MEMBER(material_id)
+REFLECT_STRUCT_MEMBER(vertices)
+REFLECT_STRUCT_MEMBER(indices)
+REFLECT_STRUCT_END()
+
 void Mesh::submit() {
 	std::vector<VertexAttrib> attribs = {
 		{3, Float, offsetof(Vertex, position)},

@@ -8,6 +8,7 @@
 #include "culling.h"
 #include "materialSystem.h"
 #include "ecs.h"
+#include "reflection.h"
 
 struct Vertex {
 	glm::vec3 position;
@@ -15,6 +16,8 @@ struct Vertex {
 	glm::vec2 tex_coord;
 	glm::vec3 tangent;
 	glm::vec3 bitangent;
+
+	REFLECT()
 };
 
 struct Mesh {
@@ -27,6 +30,8 @@ struct Mesh {
 	Mesh() {};
 	void submit();
 	void render(ID, glm::mat4*, std::vector<Material>&, RenderParams&);
+
+	REFLECT()
 };
 
 struct Model {
@@ -37,6 +42,8 @@ struct Model {
 	void on_load(World&);
 	void load_in_place(World&);
 	void render(ID, glm::mat4*, std::vector<Material>&, RenderParams&);
+
+	REFLECT()
 };
 
 Model* load_Model(World&, const std::string&);
@@ -47,6 +54,8 @@ struct ModelRenderer {
 	std::vector<Material> materials;
 
 	void set_materials(World&, std::vector<Material>& materials);
+
+	REFLECT()
 };
 
 struct ModelRendererSystem : System {

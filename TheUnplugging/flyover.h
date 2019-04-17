@@ -13,6 +13,8 @@ struct Flyover {
 
 	glm::vec2 past_movement_speed[NUM_PAST_MOVEMENT_SPEEDS];
 	int past_movement_speed_length = 0;
+
+	REFLECT()
 };
 
 struct FlyOverSystem : System {

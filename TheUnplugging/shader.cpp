@@ -5,6 +5,16 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "layermask.h"
 
+REFLECT_STRUCT_BEGIN(Uniform)
+REFLECT_STRUCT_MEMBER(name)
+REFLECT_STRUCT_END()
+
+REFLECT_STRUCT_BEGIN(Shader)
+REFLECT_STRUCT_MEMBER(v_filename)
+REFLECT_STRUCT_MEMBER(f_filename)
+REFLECT_STRUCT_MEMBER(supports_instancing)
+REFLECT_STRUCT_END()
+
 Shader* load_Shader(World& world, const std::string& vfilename, const std::string& ffilename, bool supports_instancing, bool instanced) {
 
 
@@ -79,6 +89,9 @@ void Shader::load_in_place(World& world) {
 		vshader_source += vshader_f.read();
 		fshader_source += fshader_f.read();
 	}
+
+
+
 
 	int sucess = 0;
 	char info_log[512];

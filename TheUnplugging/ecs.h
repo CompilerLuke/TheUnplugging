@@ -11,6 +11,7 @@
 #include "id.h"
 #include "system.h"
 #include "vfs.h"
+#include "reflection.h"
 
 template<typename T>
 struct Slot {
@@ -125,6 +126,8 @@ struct Store : ComponentStore {
 struct Entity {
 	bool enabled = true;
 	Layermask layermask = game_layer;
+
+	REFLECT()
 };
 
 struct World {

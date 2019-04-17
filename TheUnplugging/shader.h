@@ -5,6 +5,7 @@
 #include <glm/vec2.hpp>
 #include <glm/mat4x4.hpp>
 #include "ecs.h"
+#include "reflection.h"
 
 struct Shader;
 
@@ -19,6 +20,8 @@ struct Uniform {
 	void set_vec2(glm::vec2&);
 	void set_int(int);
 	void set_float(float);
+
+	REFLECT()
 };
 
 struct Shader {
@@ -52,6 +55,8 @@ struct Shader {
 	~Shader();
 
 	Uniform location(const std::string&);
+
+	REFLECT()
 };
 
 Shader* load_Shader(struct World&, const std::string& vfilename, const std::string& ffilename, bool supports_instancing = false, bool instanced = false);
