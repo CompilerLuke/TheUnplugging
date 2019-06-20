@@ -5,11 +5,11 @@
 #include <assimp/vector2.h>
 #include <assimp/postprocess.h>
 
-Mesh process_mesh(aiMesh* mesh, const aiScene* scene, std::vector<std::string>& materials) {
-	auto vertices = std::vector<Vertex>();
+Mesh process_mesh(aiMesh* mesh, const aiScene* scene, vector<std::string>& materials) {
+	auto vertices = vector<Vertex>();
 	vertices.reserve(mesh->mNumVertices);
 
-	auto indices = std::vector<unsigned int>();
+	auto indices = vector<unsigned int>();
 	
 	AABB aabb;
 	
@@ -35,7 +35,7 @@ Mesh process_mesh(aiMesh* mesh, const aiScene* scene, std::vector<std::string>& 
 			glm::vec3(bitangent.x, bitangent.y, bitangent.z)
 		};
 
-		vertices.push_back(v);
+		vertices.append(v);
 	}
 
 	int indices_count = 0;
@@ -47,7 +47,7 @@ Mesh process_mesh(aiMesh* mesh, const aiScene* scene, std::vector<std::string>& 
 	for (int i = 0; i < mesh->mNumFaces; i++) {
 		auto face = mesh->mFaces[i];
 		for (int j = 0; j < face.mNumIndices; j++) {
-			indices.push_back(face.mIndices[j]);
+			indices.append(face.mIndices[j]);
 		}
 	}
 
@@ -58,15 +58,15 @@ Mesh process_mesh(aiMesh* mesh, const aiScene* scene, std::vector<std::string>& 
 	std::string name(c_name.data);
 
 	int id = -1;
-	for (int i = 0; i < materials.size(); i++) {
+	for (int i = 0; i < materials.length; i++) {
 		if (materials[i] == name) {
 			id = i;
 		}
 	}
 
 	if (id == -1) {
-		materials.push_back(name);
-		id = materials.size() - 1;
+		materials.append(name);
+		id = materials.length - 1;
 	}
 
 	Mesh new_mesh;
@@ -79,13 +79,13 @@ Mesh process_mesh(aiMesh* mesh, const aiScene* scene, std::vector<std::string>& 
 	return new_mesh;
 }
 
-void process_node(aiNode* node, const aiScene* scene, std::vector<Mesh>& meshes, std::vector<std::string>& materials) {
-	meshes.reserve(meshes.size() + node->mNumMeshes);
+void process_node(aiNode* node, const aiScene* scene, vector<Mesh>& meshes, vector<std::string>& materials) {
+	meshes.reserve(meshes.length + node->mNumMeshes);
 
 	for (int i = 0; i < node->mNumMeshes; i++) {
 		auto mesh_id = node->mMeshes[i];
 		auto mesh = scene->mMeshes[mesh_id];
-		meshes.push_back(process_mesh(mesh, scene, materials));
+		meshes.append(process_mesh(mesh, scene, materials));
 	}
 
 	for (int i = 0; i < node->mNumChildren; i++) {
@@ -100,8 +100,8 @@ void Model::load_in_place(World& world) {
 	auto scene = importer.ReadFile(real_path.c_str(), aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	if (!scene) throw std::string("Could not load model ") + path + std::string(" ") + real_path;
 	
-	std::vector<Mesh> meshes;
-	std::vector<std::string> materials;
+	vector<Mesh> meshes;
+	vector<std::string> materials;
 
 	process_node(scene->mRootNode, scene, meshes, materials);
 

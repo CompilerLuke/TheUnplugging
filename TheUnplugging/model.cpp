@@ -12,7 +12,7 @@ void Model::on_load(World& world) {
 	}
 }
 
-void Model::render(ID id, glm::mat4* model, std::vector<Material>& materials, RenderParams& params) {
+void Model::render(ID id, glm::mat4* model, vector<Material>& materials, RenderParams& params) {
 	for (auto& mesh : meshes) {
 		mesh.render(id, model, materials, params);
 	}

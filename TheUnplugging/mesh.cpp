@@ -18,7 +18,7 @@ REFLECT_STRUCT_MEMBER(indices)
 REFLECT_STRUCT_END()
 
 void Mesh::submit() {
-	std::vector<VertexAttrib> attribs = {
+	vector<VertexAttrib> attribs = {
 		{3, Float, offsetof(Vertex, position)},
 		{3, Float, offsetof(Vertex, normal)},
 		{2, Float, offsetof(Vertex, tex_coord)},
@@ -33,11 +33,11 @@ void Mesh::submit() {
 	new (&this->buffer) VertexBuffer(vertices, indices, attribs);
 }
 
-void Mesh::render(ID id, glm::mat4* model, std::vector<Material>& materials, RenderParams& params) {
+void Mesh::render(ID id, glm::mat4* model, vector<Material>& materials, RenderParams& params) {
 	auto material = &materials[material_id];
 	auto aabb = TEMPORARY_ALLOC(AABB);
 	*aabb = this->aabb.apply(*model);
 
 	DrawCommand cmd(id, model, aabb, &buffer, material);
-	params.command_buffer.submit(cmd);
+	params.command_buffer->submit(cmd);
 }

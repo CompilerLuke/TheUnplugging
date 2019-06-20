@@ -3,7 +3,7 @@
 #include <vector>
 #include "layermask.h"
 
-#include <vector>
+#include "vector.h"
 #include <utility>
 #include <cassert>
 
@@ -12,7 +12,9 @@
 #include "system.h"
 #include "vfs.h"
 #include "reflection.h"
+#include "temporary.h"
 
+#if 1
 template<typename T>
 struct Slot {
 	union {
@@ -35,11 +37,14 @@ struct Slot {
 constexpr unsigned int max_entities = 1000;
 
 struct Component {
-
+	reflect::TypeDescriptor* type;
+	void* data;
 };
 
 struct ComponentStore {
 	virtual void free_by_id(ID) {};
+	virtual void make_by_id(ID) {};
+	virtual Component get_by_id(ID) { return { NULL, NULL }; };
 	virtual ~ComponentStore() {};
 };
 
@@ -86,7 +91,7 @@ struct Store : ComponentStore {
 	}
 
 	Component get_by_id(ID id) {
-		return this->by_id(id);
+		return { reflect::TypeResolver<T>::get(), by_id(id) };
 	}
 
 	void free_by_id(ID id) {
@@ -117,15 +122,33 @@ struct Store : ComponentStore {
 		return obj_ptr;
 	}
 
+	void make_by_id(ID id) {
+		make(id);
+	}
+
 	void register_component(ID id, T* obj) {
 		assert(id < max_entities);
 		id_to_obj[id] = obj;
+	}
+
+	vector<T*> filter() {
+		vector<T*> arr;
+		arr.allocator = &temporary_allocator;
+
+		for (unsigned int i = 0; i < this->N; i++) {
+			auto slot = &this->components[i];
+
+			if (!slot->is_enabled) continue;
+			arr.append(&slot->object.first);
+		}
+
+		return arr;
 	}
 };
 
 struct Entity {
 	bool enabled = true;
-	Layermask layermask = game_layer;
+	Layermask layermask = game_layer | picking_layer;
 
 	REFLECT()
 };
@@ -134,22 +157,23 @@ struct World {
 	static constexpr int components_hash_size = 100;
 
 	std::unique_ptr<ComponentStore> components[components_hash_size];
-	std::vector<std::unique_ptr<System>> systems;
+	vector<std::unique_ptr<System>> systems;
 	Level level;
 
 	template<typename T>
 	constexpr void add(Store<T>* store) {
-		assert(get<T>() == NULL);
 		components[(size_t)type_id<T>()] = std::unique_ptr<ComponentStore>(store);
 	}
 
 	void add(System* system) {
-		systems.push_back(std::unique_ptr<System>(system));
+		systems.append(std::unique_ptr<System>(system));
 	}
 
 	template<typename T>
 	constexpr Store<T>* get() {
-		return (Store<T>*)(components[(size_t)type_id<T>()].get());
+		auto ret = (Store<T>*)(components[(size_t)type_id<T>()].get());
+		assert(ret != NULL);
+		return ret;
 	}
 
 	template<typename T>
@@ -186,11 +210,19 @@ struct World {
 	}
 
 	template<typename T>
-	std::vector<T*> filter(Layermask layermask) {
+	vector<T*> filter() {
+		Store<T>* store = get<T>();
+		return store->filter();
+	}
+
+	template<typename T>
+	vector<T*> filter(Layermask layermask) {
 		Store<T>* store = get<T>();
 		Store<Entity>* entity_store = get<Entity>();
 
-		std::vector<T*> arr;
+		vector<T*> arr;
+		arr.allocator = &temporary_allocator;
+
 		for (unsigned int i = 0; i < store->N; i++) {
 			auto slot = &store->components[i];
 
@@ -199,7 +231,7 @@ struct World {
 			auto entity = entity_store->by_id(slot->object.second);
 
 			if (entity && entity->enabled && (entity->layermask & layermask)) {
-				arr.push_back(&slot->object.first);
+				arr.append(&slot->object.first);
 			}
 		}
 
@@ -218,16 +250,18 @@ struct World {
 	}
 
 	template<typename A, typename... Args>
-	typename std::enable_if<(sizeof...(Args) > 0), std::vector <ID> >::type
+	typename std::enable_if<(sizeof...(Args) > 0), vector <ID> >::type
 		filter(Layermask layermask) {
-		std::vector<ID> ids;
+		vector<ID> ids;
 		Store<Entity>* entity_store = get<Entity>();
+
+		ids.allocator = &temporary_allocator;
 
 		for (int i = 0; i < max_entities; i++) {
 			if (has_component<A, Args...>(i)) {
 				auto entity = entity_store->by_id(i);
 				if (entity && entity->enabled && entity->layermask & layermask) {
-					ids.push_back(i);
+					ids.append(i);
 				}
 			}
 		}
@@ -236,14 +270,14 @@ struct World {
 	}
 
 	void render(RenderParams& params) {
-		for (int i = 0; i < systems.size(); i++) {
+		for (int i = 0; i < systems.length; i++) {
 			auto system = systems[i].get();
 			system->render(*this, params);
 		}
 	}
 
 	void update(UpdateParams& params) {
-		for (int i = 0; i < systems.size(); i++) {
+		for (int i = 0; i < systems.length; i++) {
 			auto system = systems[i].get();
 			system->update(*this, params);
 		}
@@ -255,7 +289,13 @@ struct World {
 		}
 	}
 
+	vector<Component> components_by_id(ID id);
+
 private:
 	unsigned int current_id = 0;
-	std::vector<ID> freed_entities;
+	vector<ID> freed_entities;
 };
+
+#else 
+#include "new_ecs.h"
+#endif 

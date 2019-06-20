@@ -1,9 +1,23 @@
 #include "draw.h"
 #include <glad/glad.h>
-#include <algorithm>
 
-REFLECT_ENUM(Cull)
-REFLECT_ENUM(DepthFunc)
+REFLECT_BEGIN_ENUM(DrawOrder)
+REFLECT_ENUM_VALUE(draw_opaque)
+REFLECT_ENUM_VALUE(draw_skybox)
+REFLECT_ENUM_VALUE(draw_transparent)
+REFLECT_ENUM_VALUE(draw_over)
+REFLECT_END_ENUM()
+
+REFLECT_BEGIN_ENUM(Cull)
+REFLECT_ENUM_VALUE(Cull_Front)
+REFLECT_ENUM_VALUE(Cull_Back)
+REFLECT_ENUM_VALUE(Cull_None)
+REFLECT_END_ENUM()
+
+REFLECT_BEGIN_ENUM(DepthFunc)
+REFLECT_ENUM_VALUE(DepthFunc_Less)
+REFLECT_ENUM_VALUE(DepthFunc_Lequal)
+REFLECT_END_ENUM()
 
 REFLECT_STRUCT_BEGIN(DrawCommandState)
 REFLECT_STRUCT_MEMBER(cull)
@@ -32,7 +46,10 @@ DrawCommand::DrawCommand(ID id, glm::mat4* model, AABB* aabb, VertexBuffer* vert
 	id(id), model_m(model), aabb(aabb), buffer(vertex_buffer), material(material)
 {}
 
-CommandBuffer::CommandBuffer() {}
+CommandBuffer::CommandBuffer() {
+	commands.allocator = &temporary_allocator;
+}
+
 CommandBuffer::~CommandBuffer() {}
 
 unsigned int CommandBuffer::next_texture_index() {
@@ -40,7 +57,7 @@ unsigned int CommandBuffer::next_texture_index() {
 }
 
 void CommandBuffer::submit(DrawCommand& cmd) {
-	commands.push_back(cmd);
+	commands.append(cmd);
 }
 
 void CommandBuffer::clear() {
@@ -54,7 +71,7 @@ bool compare_key(DrawCommand& cmd1, DrawCommand& cmd2) {
 	return cmd1.key < cmd2.key;
 }
 
-int can_instance(std::vector<DrawCommand, STDTemporaryAllocator<DrawCommand>>& commands, int i, World& world) {
+int can_instance(vector<DrawCommand>& commands, int i, World& world) {
 	auto count = 1;
 
 	auto shader = world.by_id<Shader>(commands[i].material->shader);
@@ -63,7 +80,7 @@ int can_instance(std::vector<DrawCommand, STDTemporaryAllocator<DrawCommand>>& c
 	auto instanced_version = shader->instanced_version.get();
 	if (!instanced_version) return 0;
 
-	while (i + 1 < commands.size()) {
+	while (i + 1 < commands.length) {
 		if (commands[i].key != commands[i + 1].key) break;
 
 		count += 1;
@@ -85,7 +102,7 @@ void switch_shader(World& world, RenderParams& params, ID shader_id, bool instan
 	}
 
 	shader->bind();
-	params.command_buffer.current_texture_index = 0;
+	params.command_buffer->current_texture_index = 0;
 	params.set_shader_scene_params(*shader, world);
 }
 
@@ -177,10 +194,10 @@ void CommandBuffer::submit_to_gpu(World& world, RenderParams& render_params) {
 			    + ((long long)cmd.material % 64);
 	}
 
-	std::sort(commands.begin(), commands.end(), compare_key);
+	//std::sort(commands.begin(), commands.end(), compare_key);
 	bool last_was_instanced = false;
 
-	for (int i = 0; i < commands.size();) {
+	for (int i = 0; i < commands.length;) {
 		auto& cmd = commands[i];
 		auto& mat = *cmd.material;
 

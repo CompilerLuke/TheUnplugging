@@ -22,26 +22,26 @@ struct Vertex {
 
 struct Mesh {
 	VertexBuffer buffer;
-	std::vector<Vertex> vertices;
-	std::vector<unsigned int> indices;
+	vector<Vertex> vertices;
+	vector<unsigned int> indices;
 	AABB aabb;
 	unsigned int material_id;
 
 	Mesh() {};
 	void submit();
-	void render(ID, glm::mat4*, std::vector<Material>&, RenderParams&);
+	void render(ID, glm::mat4*, vector<Material>&, RenderParams&);
 
 	REFLECT()
 };
 
 struct Model {
 	std::string path;
-	std::vector<Mesh> meshes;
-	std::vector<std::string> materials;
+	vector<Mesh> meshes;
+	vector<std::string> materials;
 
 	void on_load(World&);
 	void load_in_place(World&);
-	void render(ID, glm::mat4*, std::vector<Material>&, RenderParams&);
+	void render(ID, glm::mat4*, vector<Material>&, RenderParams&);
 
 	REFLECT()
 };
@@ -51,9 +51,9 @@ Model* load_Model(World&, const std::string&);
 struct ModelRenderer {
 	bool visible = true;
 	int model_id = -1;
-	std::vector<Material> materials;
+	vector<Material> materials;
 
-	void set_materials(World&, std::vector<Material>& materials);
+	void set_materials(World&, vector<Material>& materials);
 
 	REFLECT()
 };

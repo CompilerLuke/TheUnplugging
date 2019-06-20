@@ -1,11 +1,5 @@
 #include "temporary.h"
 
-#ifndef TEMPORARY_ALLOCATOR_SIZE
-#define TEMPORARY_ALLOCATOR_SIZE 10000
-#endif
-
-TemporaryAllocator temporary_allocator(TEMPORARY_ALLOCATOR_SIZE);
-
 void TemporaryAllocator::clear() {
 	this->occupied = 0;
 }
@@ -13,16 +7,14 @@ void TemporaryAllocator::clear() {
 TemporaryAllocator::TemporaryAllocator(size_t max_size) {
 	this->occupied = 0;
 	this->max_size = max_size;
-	this->memory = new char[max_size];
+	this->memory = ALLOC_ARRAY(char, max_size);
 }
 
 TemporaryAllocator::~TemporaryAllocator() {
-	delete[] this->memory;
+	FREE_ARRAY(this->memory, max_size);
 }
 
-
-
-void* TemporaryAllocator::alloc(size_t size) {
+void* TemporaryAllocator::allocate(size_t size) {
 	auto occupied = this->occupied;
 	this->occupied += size;
 	if (this->occupied > this->max_size) {

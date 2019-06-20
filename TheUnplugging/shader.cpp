@@ -1,9 +1,10 @@
 #include "shader.h"
 #include "vfs.h"
-#include <iostream>
+#include "logger.h"
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 #include "layermask.h"
+#include "vector.h"
 
 REFLECT_STRUCT_BEGIN(Uniform)
 REFLECT_STRUCT_MEMBER(name)
@@ -16,10 +17,8 @@ REFLECT_STRUCT_MEMBER(supports_instancing)
 REFLECT_STRUCT_END()
 
 Shader* load_Shader(World& world, const std::string& vfilename, const std::string& ffilename, bool supports_instancing, bool instanced) {
-
-
-	std::vector<Shader*> existing_shaders = world.filter<Shader>(any_layer);
-	for (int i = 0; i < existing_shaders.size(); i++) {
+	vector<Shader*> existing_shaders = world.filter<Shader>(any_layer);
+	for (int i = 0; i < existing_shaders.length; i++) {
 		if (existing_shaders[i]->v_filename == vfilename && existing_shaders[i]->f_filename == ffilename) {
 			return existing_shaders[i]; 
 		}
@@ -125,8 +124,8 @@ void Shader::load_in_place(World& world) {
 	this->projection = this->location("projection");
 	this->view = this->location("view");
 	this->viewPos = this->location("viewPos");
-	this->dirLight_color = this->location("dirLight.direction");
-	this->dirLight_direction = this->location("dirLight.color");
+	this->dirLight_color = this->location("dirLight.color");
+	this->dirLight_direction = this->location("dirLight.direction");
 	
 	this->shadowMaskMap = this->location("shadowMaskMap");
 

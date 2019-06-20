@@ -7,6 +7,7 @@
 #include "id.h"
 #include "reflection.h"
 #include "draw.h"
+#include "vector.h"
 
 enum Param_Type {
 	Param_Vec3,
@@ -40,11 +41,12 @@ Param make_Param_Cubemap(const Uniform& loc, ID);
 struct Material {
 	std::string name;
 	ID shader;
-	std::vector<Param> params;
+	vector<Param> params;
 	DrawCommandState* state;
 
 	REFLECT()
 };
 
 
-Material* material_by_name(std::vector<Material>&, const std::string&);
+Material* material_by_name(vector<Material>&, const std::string&);
+vector<Param> make_SubstanceMaterial(World& world, const std::string& folder, const std::string& name);

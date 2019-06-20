@@ -4,7 +4,7 @@
 
 REFLECT_STRUCT_BEGIN(ModelRenderer)
 REFLECT_STRUCT_MEMBER(visible)
-REFLECT_STRUCT_MEMBER(model_id)
+REFLECT_STRUCT_MEMBER_TAG(model_id, reflect::ModelIDTag)
 REFLECT_STRUCT_MEMBER(materials)
 REFLECT_STRUCT_END()
 
@@ -19,7 +19,7 @@ void ModelRendererSystem::render(World& world, RenderParams& params) {
 		auto model = world.by_id<Model>(self->model_id);
 		if (!model) continue;
 
-		assert(model->materials.size() == self->materials.size());
+		assert(model->materials.length == self->materials.length);
 
 		auto model_m = TEMPORARY_ALLOC(glm::mat4);
 		*model_m = transform->compute_model_matrix();
@@ -28,8 +28,8 @@ void ModelRendererSystem::render(World& world, RenderParams& params) {
 	}
 }
 
-void ModelRenderer::set_materials(World& world, std::vector<Material>& materials) {
-	std::vector<Material> materials_in_order;
+void ModelRenderer::set_materials(World& world, vector<Material>& materials) {
+	vector<Material> materials_in_order;
 
 	if (this->model_id == -1) return;
 	
@@ -40,7 +40,7 @@ void ModelRenderer::set_materials(World& world, std::vector<Material>& materials
 		auto mat = material_by_name(materials, mat_name);
 		if (!mat) throw "Missing material";
 
-		materials_in_order.push_back(*mat);
+		materials_in_order.append(*mat);
 	}
 
 	this->materials = materials_in_order;

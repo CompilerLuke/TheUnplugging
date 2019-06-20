@@ -81,7 +81,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\User\source\repos\TheUnplugging\TheUnplugging\vendor\imgui\examples\;C:\Users\User\source\repos\TheUnplugging\TheUnplugging\vendor\imgui;C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <TreatWarningAsError>false</TreatWarningAsError>
@@ -97,7 +97,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\User\source\repos\TheUnplugging\TheUnplugging\vendor\imgui\examples\;C:\Users\User\source\repos\TheUnplugging\TheUnplugging\vendor\imgui;C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <TreatWarningAsError>false</TreatWarningAsError>
@@ -115,12 +115,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\User\source\repos\TheUnplugging\TheUnplugging\vendor\imgui;C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Include;C:\Users\User\source\repos\TheUnplugging\TheUnplugging\vendor\imgui\examples\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Libs\assimp-vc140-mt.lib;C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Libs\glfw3.lib;C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Libs\LinearMath.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Libs\LinearMath.lib;C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Libs\glfw3.lib;C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Libs\glad.o;C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Libs\assimp-vc140-mt.lib;C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Libs\BtWrapper.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -131,70 +133,100 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\User\source\repos\TheUnplugging\TheUnplugging\vendor\imgui;C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Include;C:\Users\User\source\repos\TheUnplugging\TheUnplugging\vendor\imgui\examples\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Libs\assimp-vc140-mt.lib;C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Libs\glfw3.lib;C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Libs\LinearMath.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Libs\LinearMath.lib;C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Libs\glfw3.lib;C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Libs\glad.o;C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Libs\assimp-vc140-mt.lib;C:\Users\User\Desktop\Game Engine\OpenGl libraries and headers\Libs\BtWrapper.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="allocator.cpp" />
+    <ClCompile Include="benchmark.cpp" />
     <ClCompile Include="buffer.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="culling.cpp" />
     <ClCompile Include="device.cpp" />
+    <ClCompile Include="displayComponents.cpp" />
     <ClCompile Include="draw.cpp" />
     <ClCompile Include="ecs.cpp" />
+    <ClCompile Include="editor.cpp" />
     <ClCompile Include="flyover.cpp" />
     <ClCompile Include="frameBuffer.cpp" />
+    <ClCompile Include="gizmo.cpp" />
     <ClCompile Include="ibl.cpp" />
     <ClCompile Include="input.cpp" />
     <ClCompile Include="lights.cpp" />
+    <ClCompile Include="lister.cpp" />
     <ClCompile Include="load_model.cpp" />
+    <ClCompile Include="logger.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="materialSystem.cpp" />
     <ClCompile Include="mesh.cpp" />
     <ClCompile Include="model.cpp" />
+    <ClCompile Include="modelAssetTab.cpp" />
     <ClCompile Include="model_renderer.cpp" />
+    <ClCompile Include="new_ecs.cpp" />
     <ClCompile Include="physics.cpp" />
+    <ClCompile Include="picking.cpp" />
     <ClCompile Include="primitives.cpp" />
     <ClCompile Include="reflection.cpp" />
     <ClCompile Include="renderParams.cpp" />
     <ClCompile Include="renderPass.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="shadow.cpp" />
+    <ClCompile Include="static_vector.cpp" />
+    <ClCompile Include="system.cpp" />
     <ClCompile Include="temporary.cpp" />
     <ClCompile Include="texture.cpp" />
     <ClCompile Include="time.cpp" />
     <ClCompile Include="transforms.cpp" />
     <ClCompile Include="update_params.cpp" />
+    <ClCompile Include="vendor\ImGuizmo\ImGuizmo.cpp" />
+    <ClCompile Include="vendor\imgui\examples\imgui_impl_glfw.cpp" />
+    <ClCompile Include="vendor\imgui\examples\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="vendor\imgui\imgui.cpp" />
+    <ClCompile Include="vendor\imgui\imgui_draw.cpp" />
+    <ClCompile Include="vendor\imgui\imgui_widgets.cpp" />
     <ClCompile Include="vfs.cpp" />
     <ClCompile Include="volumetric.cpp" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="allocator.h" />
     <ClInclude Include="buffer.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="culling.h" />
     <ClInclude Include="device.h" />
+    <ClInclude Include="displayComponents.h" />
     <ClInclude Include="draw.h" />
     <ClInclude Include="ecs.h" />
+    <ClInclude Include="editor.h" />
     <ClInclude Include="eventDispatcher.h" />
     <ClInclude Include="flyover.h" />
     <ClInclude Include="frameBuffer.h" />
+    <ClInclude Include="gizmo.h" />
     <ClInclude Include="ibl.h" />
     <ClInclude Include="id.h" />
     <ClInclude Include="input.h" />
     <ClInclude Include="layermask.h" />
     <ClInclude Include="lights.h" />
+    <ClInclude Include="lister.h" />
+    <ClInclude Include="logger.h" />
     <ClInclude Include="materialSystem.h" />
     <ClInclude Include="model.h" />
+    <ClInclude Include="modelAssetTab.h" />
+    <ClInclude Include="new_ecs.h" />
     <ClInclude Include="pass.h" />
     <ClInclude Include="physics.h" />
+    <ClInclude Include="picking.h" />
     <ClInclude Include="primitives.h" />
     <ClInclude Include="reflection.h" />
     <ClInclude Include="renderPass.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="shadow.h" />
     <ClInclude Include="system.h" />
@@ -202,6 +234,17 @@
     <ClInclude Include="game_time.h" />
     <ClInclude Include="texture.h" />
     <ClInclude Include="transform.h" />
+    <ClInclude Include="vector.h" />
+    <ClInclude Include="vendor\ImGuizmo\ImGuizmo.h" />
+    <ClInclude Include="vendor\imgui\examples\example_apple_metal\Shared\AppDelegate.h" />
+    <ClInclude Include="vendor\imgui\examples\example_apple_metal\Shared\Renderer.h" />
+    <ClInclude Include="vendor\imgui\examples\example_apple_metal\Shared\ViewController.h" />
+    <ClInclude Include="vendor\imgui\examples\imgui_impl_glfw.h" />
+    <ClInclude Include="vendor\imgui\examples\imgui_impl_opengl3.h" />
+    <ClInclude Include="vendor\imgui\imgui.h" />
+    <ClInclude Include="vendor\imgui\stb_rect_pack.h" />
+    <ClInclude Include="vendor\imgui\stb_textedit.h" />
+    <ClInclude Include="vendor\imgui\stb_truetype.h" />
     <ClInclude Include="vfs.h" />
     <ClInclude Include="volumetric.h" />
     <ClInclude Include="window.h" />

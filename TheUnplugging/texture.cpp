@@ -30,10 +30,10 @@ void Texture::on_load(World& world) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16);
 
-	auto data = stbi_load(real_filename.c_str(), &width, &height, &nr_channels, 3);
+	auto data = stbi_load(real_filename.c_str(), &width, &height, &nr_channels, 4); //todo might waste space
 	if (!data) throw "Could not load texture";
 
-	auto internal_color_format = GL_RGB;
+	auto internal_color_format = GL_RGBA;
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, internal_color_format, GL_UNSIGNED_BYTE, data);
 	glGenerateMipmap(GL_TEXTURE_2D);

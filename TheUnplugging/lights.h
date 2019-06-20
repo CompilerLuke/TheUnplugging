@@ -5,8 +5,8 @@
 #include "reflection.h"
 
 struct DirLight {
-	glm::vec3 direction;
-	glm::vec3 color;
+	glm::vec3 direction = glm::vec3(0,1.0,0);
+	glm::vec3 color = glm::vec3(1.0);
 
 	REFLECT()
 

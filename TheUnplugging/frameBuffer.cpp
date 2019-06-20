@@ -88,7 +88,7 @@ Framebuffer::Framebuffer(World& world, FramebufferSettings& settings) {
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, fbo);
 	}
 
-	for (int i = 0; i < settings.color_attachments.size(); i++) {
+	for (int i = 0; i < settings.color_attachments.length; i++) {
 		auto& attach = settings.color_attachments[i];
 		add_attachment(world, settings.width, settings.height, attach, GL_COLOR_ATTACHMENT0 + i);
 	}

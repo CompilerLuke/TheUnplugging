@@ -1,9 +1,13 @@
 #pragma once
 
-#include <vector>
-#include <iostream>
+#include "allocator.h"
+#include "vector.h"
 #include <string>
 #include <cstddef>
+#include <utility>
+#include <vector>
+
+struct World;
 
 namespace reflect {
 
@@ -18,7 +22,7 @@ namespace reflect {
 		TypeDescriptor(const char* name, size_t size) : name{ name }, size{ size } {}
 		virtual ~TypeDescriptor() {}
 		virtual std::string getFullName() const { return name; }
-		virtual void dump(const void* obj, int indentLevel = 0) const = 0;
+		virtual bool render_fields(void* data, const std::string& prefix, struct World& world);
 	};
 
 	//--------------------------------------------------------
@@ -65,11 +69,21 @@ namespace reflect {
 	// Type descriptors for user-defined structs/classes
 	//--------------------------------------------------------
 
+	enum TypeTag {
+		NoTag,
+		LayermaskTag,
+		ModelIDTag,
+		ShaderIDTag,
+		TextureIDTag,
+		CubemapIDTag,
+	};
+
 	struct TypeDescriptor_Struct : TypeDescriptor {
 		struct Member {
 			const char* name;
 			size_t offset;
 			TypeDescriptor* type;
+			TypeTag tag;
 		};
 
 		std::vector<Member> members;
@@ -79,15 +93,7 @@ namespace reflect {
 		}
 		TypeDescriptor_Struct(const char* name, size_t size, const std::initializer_list<Member>& init) : TypeDescriptor{ nullptr, 0 }, members{ init } {
 		}
-		virtual void dump(const void* obj, int indentLevel) const override {
-			std::cout << name << " {" << std::endl;
-			for (const Member& member : members) {
-				std::cout << std::string(4 * (indentLevel + 1), ' ') << member.name << " = ";
-				member.type->dump((char*)obj + member.offset, indentLevel + 1);
-				std::cout << std::endl;
-			}
-			std::cout << std::string(4 * indentLevel, ' ') << "}";
-		}
+		virtual bool render_fields(void* data, const std::string& prefix, struct World& world);
 	};
 
 	struct TypeDescriptor_Union : TypeDescriptor {
@@ -95,6 +101,7 @@ namespace reflect {
 			const char* name;
 			size_t offset;
 			TypeDescriptor* type;
+			TypeTag tag;
 		};
 
 		size_t tag_offset = 0;
@@ -106,40 +113,18 @@ namespace reflect {
 			init(this);
 		}
 
-		virtual void dump(const void* obj, int indentLevel) const override {
-			int tag = *(const int*)((char*)obj + tag_offset);
-			const Member& member = cases[tag];
-			std::cout << member.name << "(";
-			member.type->dump((char*)obj + member.offset, indentLevel);
-			std::cout << ")" << std::endl;
-		}
+		virtual bool render_fields(void* data, const std::string& prefix, struct World& world);
 	};
 
-	struct TypeDescriptor_Alias : TypeDescriptor {
-		TypeDescriptor* item;
+	struct TypeDescriptor_Enum : TypeDescriptor {
+	std::vector<std::pair<std::string, int>> values;
 
-		TypeDescriptor_Alias(void(*init)(TypeDescriptor_Alias*)) : TypeDescriptor{ nullptr, 0 } {
-		}
+	TypeDescriptor_Enum(void(*init)(TypeDescriptor_Enum*)) : TypeDescriptor{ nullptr, 0 } {
+		init(this);
+	}
 
-		virtual void dump(const void* obj, int indentLevel) const override {
-			std::cout << name << " ";
-			item->dump(obj, indentLevel);
-		}
-	};
-
-#define REFLECT_ALIAS(type, alias) namespace reflect { \
-	void type##initReflection(reflect::TypeDescriptor_Alias* typeDesc) { \
-		\
-        typeDesc->name = #type; \
-        typeDesc->item = reflect::TypeResolver<alias>::get(); \
-	} \
-	\
-	template<>\
-	TypeDescriptor* getPrimitiveDescriptor<type>() { \
-		static reflect::TypeDescriptor_Alias alias_descriptor(type##initReflection); \
-		return &alias_descriptor; \
-	} \
-} 
+	virtual bool render_fields(void* data, const std::string& prefix, struct World& world);
+};
 
 
 #define REFLECT() \
@@ -156,7 +141,10 @@ namespace reflect {
         typeDesc->members = {
 
 #define REFLECT_STRUCT_MEMBER(name) \
-            {#name, offsetof(T, name), reflect::TypeResolver<decltype(T::name)>::get()},
+            {#name, offsetof(T, name), reflect::TypeResolver<decltype(T::name)>::get(), reflect::NoTag},
+
+#define REFLECT_STRUCT_MEMBER_TAG(name, tag) \
+            {#name, offsetof(T, name), reflect::TypeResolver<decltype(T::name)>::get(), tag},
 
 #define REFLECT_STRUCT_END() \
         }; \
@@ -177,70 +165,66 @@ namespace reflect {
         typeDesc->cases = {
 
 #define REFLECT_UNION_FIELD(name) }; \
-	typeDesc->members = {{#name, offsetof(T, name), reflect::TypeResolver<decltype(T::name)>::get()}}; \
+	typeDesc->members = {{#name, offsetof(T, name), reflect::TypeResolver<decltype(T::name)>::get(), reflect::NoTag}}; \
 	typeDesc->cases = {
 
 #define REFLECT_UNION_CASE(name) REFLECT_STRUCT_MEMBER(name)
+#define REFLECT_UNION_CASE(name, tag) REFLECT_STRUCT_MEMBER_TAG(name, tag)
 
 #define REFLECT_UNION_END() REFLECT_STRUCT_END()
 
-#define REFLECT_ENUM(type) \
-namespace reflect { \
+#define REFLECT_BEGIN_ENUM(type) \
+	void init##type(reflect::TypeDescriptor_Enum*); \
+	\
 	template<> \
-	TypeDescriptor* getPrimitiveDescriptor<type>() { \
-			return getPrimitiveDescriptor<int>(); \
+	reflect::TypeDescriptor* reflect::getPrimitiveDescriptor<type>() { \
+			static reflect::TypeDescriptor_Enum type(init##type); \
+			return &type; \
 	} \
-}
+	void init##type(reflect::TypeDescriptor_Enum* e) { \
+		e->size = sizeof(type); \
+		e->values = {
+
+#define REFLECT_ENUM_VALUE(name) {#name, name},
+
+#define REFLECT_END_ENUM() }; }
 
 //--------------------------------------------------------
-// Type descriptors for std::vector
+// Type descriptors for vector
 //--------------------------------------------------------
 
-struct TypeDescriptor_StdVector : TypeDescriptor {
+struct TypeDescriptor_Vector : TypeDescriptor {
     TypeDescriptor* itemType;
     size_t (*getSize)(const void*);
     const void* (*getItem)(const void*, size_t);
 
     template <typename ItemType>
-    TypeDescriptor_StdVector(ItemType*)
-        : TypeDescriptor{"std::vector<>", sizeof(std::vector<ItemType>)},
+    TypeDescriptor_Vector(ItemType*)
+        : TypeDescriptor{"vector<>", sizeof(vector<ItemType>)},
                          itemType{TypeResolver<ItemType>::get()} {
         getSize = [](const void* vecPtr) -> size_t {
-            const std::vector<ItemType>& vec = *(const std::vector<ItemType>*) vecPtr;
-            return vec.size();
+            const vector<ItemType>& vec = *(const vector<ItemType>*) vecPtr;
+            return vec.length;
         };
         getItem = [](const void* vecPtr, size_t index) -> const void* {
-            const std::vector<ItemType>& vec = *(const std::vector<ItemType>*) vecPtr;
+            const vector<ItemType>& vec = *(const vector<ItemType>*) vecPtr;
             return &vec[index];
         };
     }
     virtual std::string getFullName() const override {
-        return std::string("std::vector<") + itemType->getFullName() + ">";
+        return std::string("vector<") + itemType->getFullName() + ">";
     }
-    virtual void dump(const void* obj, int indentLevel) const override {
-        size_t numItems = getSize(obj);
-        std::cout << getFullName();
-        if (numItems == 0) {
-            std::cout << "{}";
-        } else {
-            std::cout << "{" << std::endl;
-            for (size_t index = 0; index < numItems; index++) {
-                std::cout << std::string(4 * (indentLevel + 1), ' ') << "[" << index << "] ";
-                itemType->dump(getItem(obj, index), indentLevel + 1);
-                std::cout << std::endl;
-            }
-            std::cout << std::string(4 * indentLevel, ' ') << "}";
-        }
-    }
+
+	virtual bool render_fields(void* data, const std::string& prefix, struct World& world);
 };
 
-// Partially specialize TypeResolver<> for std::vectors:
-// Partially specialize TypeResolver<> for std::vectors:
+// Partially specialize TypeResolver<> for vectors:
+// Partially specialize TypeResolver<> for vectors:
 template <typename T>
-class TypeResolver<std::vector<T>> {
+class TypeResolver<vector<T>> {
 public:
 	static TypeDescriptor* get() {
-		static TypeDescriptor_StdVector typeDesc{ (T*) nullptr };
+		static TypeDescriptor_Vector typeDesc{ (T*) nullptr };
 		return &typeDesc;
 	}
 };
@@ -259,9 +243,7 @@ struct TypeDescriptor_Pointer : TypeDescriptor {
 		return itemType->getFullName() + "*";
 	}
 
-	virtual void dump(const void* obj, int indentLevel) const override {
-		itemType->dump(*(const void**)obj, indentLevel);
-	}
+	virtual bool render_fields(void* data, const std::string& prefix, struct World& world);
 };
 
 // Partially specialize TypeResolver<> for pointer:

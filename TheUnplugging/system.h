@@ -5,8 +5,8 @@ using Layermask = unsigned int;
 
 struct RenderParams {
 	Layermask layermask;
-	struct CommandBuffer& command_buffer;
-	struct Pass& pass;
+	struct CommandBuffer* command_buffer;
+	struct Pass* pass;
 	struct Skybox* skybox;
 	struct DirLight* dir_light;
 
@@ -18,7 +18,7 @@ struct RenderParams {
 	unsigned int height = 0;
 	void set_shader_scene_params(struct Shader&, struct World&);
 
-	RenderParams(struct CommandBuffer&, struct Pass&);
+	RenderParams(struct CommandBuffer*, struct Pass*);
 };
 
 struct UpdateParams {
@@ -34,3 +34,5 @@ struct System {
 	virtual void update(struct World& world, struct UpdateParams& params) {};
 	virtual ~System() {}
 };
+
+void register_default_systems_and_components(World& world);

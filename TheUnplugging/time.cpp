@@ -10,6 +10,6 @@ void Time::update_time(UpdateParams& params) {
 
 	std::chrono::duration<double, std::milli> delta = now - last_frame;
 
-	params.delta_time = delta.count() / 1000; 
+	params.delta_time = delta.count() / 1000.0; 
 	last_frame = now;
 }

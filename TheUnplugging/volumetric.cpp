@@ -21,7 +21,7 @@ FogMap::FogMap(World& world, unsigned int width, unsigned int height) {
 	settings.width = width;
 	settings.height = height;
 	settings.depth_buffer = DepthComponent24;
-	settings.color_attachments.push_back(color_attachment);
+	settings.color_attachments.append(color_attachment);
 
 	this->fbo = Framebuffer(world, settings);
 	this->map = tex;

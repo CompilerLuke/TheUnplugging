@@ -16,7 +16,7 @@ MainPass::MainPass(World& world, Window& window)
 	settings.width = window.width;
 	settings.height = window.height;
 	settings.depth_buffer = DepthComponent24;
-	settings.color_attachments.push_back(attachment);
+	settings.color_attachments.append(attachment);
 
 	device.width = window.width;
 	device.height = window.height;
@@ -43,7 +43,7 @@ void MainPass::render(World& world, RenderParams& params) {
 	device.width = params.width;
 	device.height = params.height;
 
-	params.command_buffer.clear();
+	params.command_buffer->clear();
 
 	world.render(params);
 
@@ -54,7 +54,7 @@ void MainPass::render(World& world, RenderParams& params) {
 	current_frame.clear_color(glm::vec4(0, 0, 0, 1));
 	current_frame.clear_depth(glm::vec4(0, 0, 0, 1));
 
-	params.command_buffer.submit_to_gpu(world, params);
+	params.command_buffer->submit_to_gpu(world, params);
 
 	current_frame.unbind();
 

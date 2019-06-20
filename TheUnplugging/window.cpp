@@ -1,5 +1,5 @@
 #include "window.h"
-#include <iostream>
+#include "logger.h"
 
 void framebuffer_size_callback(GLFWwindow* window_ptr, int width, int height) {
 	auto window = (Window*)glfwGetWindowUserPointer(window_ptr);
@@ -32,7 +32,7 @@ void drop_callback(GLFWwindow* window_ptr, int count, const char** paths) {
 }
 
 void gl_error_callback(GLenum source, GLenum typ, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* ptr) {
-	std::cout << message << std::endl;
+	log(message);
 }
 
 void Window::init() {
@@ -73,7 +73,8 @@ void Window::init() {
 		throw "Failed to initialize GLAD!";
 	}
 
-	glEnable(GL_DEBUG_OUTPUT);
+
+	//glEnable(GL_DEBUG_OUTPUT);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(gl_error_callback, this); 
 

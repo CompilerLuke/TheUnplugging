@@ -1,5 +1,5 @@
 #include "input.h"
-#include <iostream>
+#include "logger.h"
 
 void on_cursor_pos(Input* self, glm::vec2 mouse_position) {
 	if (self->first_mouse) {
@@ -76,4 +76,10 @@ float Input::get_horizontal_axis() {
 
 void Input::clear() {
 	mouse_offset = glm::vec2(0);
+
+	for (auto pair : this->keys) {
+		if (pair.second == GLFW_PRESS) {
+			this->keys[pair.first] = GLFW_REPEAT; 
+		}
+	}
 }

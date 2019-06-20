@@ -12,17 +12,18 @@
 
 enum Cull {Cull_Front, Cull_Back, Cull_None};
 enum DepthFunc {DepthFunc_Less, DepthFunc_Lequal};
-
-constexpr int draw_opaque = 0;
-constexpr int draw_skybox = 1;
-constexpr int draw_transparent = 2;
-constexpr int draw_over = 3;
+enum DrawOrder {
+	draw_opaque = 0,
+	draw_skybox = 1,
+	draw_transparent = 2,
+	draw_over = 3
+};
 
 struct DrawCommandState {
-	Cull cull;
-	DepthFunc depth_func;
-	bool clear_depth_buffer;
-	unsigned int order;
+	Cull cull = Cull_None;
+	DepthFunc depth_func = DepthFunc_Lequal;
+	bool clear_depth_buffer = false;
+	DrawOrder order = draw_opaque;
 
 	REFLECT()
 };
@@ -45,7 +46,7 @@ struct DrawCommand {
 };
 
 struct CommandBuffer {
-	std::vector<DrawCommand, STDTemporaryAllocator<DrawCommand> > commands;
+	vector<DrawCommand> commands;
 	std::unordered_map<DrawSortKey, int> instanced_buffers;
 
 	unsigned int current_texture_index = 0;

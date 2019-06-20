@@ -3,12 +3,13 @@
 #include <glm/vec2.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include "displayComponents.h"
 
 #define PRIMITIVE_TYPE_DESCRIPTOR(type) \
 struct TypeDescriptor_##type : TypeDescriptor { \
 	TypeDescriptor_##type() : TypeDescriptor{ #type , sizeof(type) } {}; \
-	virtual void dump(const void* obj, int) const override { \
-		std::cout << *(const type*)obj << std::endl; \
+	bool render_fields(void* data, const std::string& prefix, struct World& world) { \
+		return render_fields_primitive((type*)data, prefix); \
 	} \
 }; \
 \
@@ -17,8 +18,6 @@ TypeDescriptor* getPrimitiveDescriptor<type>() { \
 	static TypeDescriptor_##type typeDesc; \
 	return &typeDesc;  \
 } 
-
-
 
 namespace reflect {
 
@@ -39,9 +38,10 @@ namespace reflect {
 	struct TypeDescriptor_StdString : TypeDescriptor {
 		TypeDescriptor_StdString() : TypeDescriptor{ "std::string", sizeof(std::string) } {
 		}
-		virtual void dump(const void* obj, int /* unused */) const override {
-			std::cout << "std::string{\"" << *(const std::string*) obj << "\"}";
-		}
+		bool render_fields(void* data, const std::string& prefix, struct World& world) {
+			render_fields_primitive((std::string*)data, prefix); 
+			return true;
+		} 
 	};
 
 	template <>
@@ -54,9 +54,8 @@ namespace reflect {
 		TypeDescriptor_GlmVec3() : TypeDescriptor{ "glm::vec3", sizeof(glm::vec3) } {
 
 		}
-		virtual void dump(const void* obj, int) const override {
-			auto ptr = (const glm::vec3*)obj;
-			std::cout << "glm::vec3{" << ptr->x << "," << ptr->y << "," << ptr->z << "}";
+		bool render_fields(void* data, const std::string& prefix, struct World& world) {
+			return render_fields_primitive((glm::vec3*)data, prefix);
 		}
 	};
 
@@ -69,9 +68,8 @@ namespace reflect {
 	struct TypeDescriptor_GlmVec2 : TypeDescriptor {
 		TypeDescriptor_GlmVec2() : TypeDescriptor{ "glm::vec2", sizeof(glm::vec2) } {}
 	
-		virtual void dump(const void* obj, int) const override {
-			auto ptr = (const glm::vec2*)obj;
-			std::cout << "glm::vec2{" << ptr->x << "," << ptr->y << "}";
+		bool render_fields(void* data, const std::string& prefix, struct World& world) {
+			return render_fields_primitive((glm::vec2*)data, prefix);
 		}
 	};
 
@@ -83,8 +81,8 @@ namespace reflect {
 
 	struct TypeDescriptor_Mat4 : TypeDescriptor {
 		TypeDescriptor_Mat4() : TypeDescriptor{ "glm::mat4", sizeof(glm::vec3)} {}
-		virtual void dump(const void* obj, int) const override {
-			std::cout << "glm::mat4";
+		bool render_fields(void* data, const std::string& prefix, struct World& world) {
+			return render_fields_primitive((glm::mat4*)data, prefix);
 		}
 	};
 
@@ -97,10 +95,8 @@ namespace reflect {
 	struct TypeDescriptor_GlmQuat : TypeDescriptor {
 		TypeDescriptor_GlmQuat() : TypeDescriptor{ "glm::quat", sizeof(glm::quat) } {}
 
-		virtual void dump(const void* obj, int) const override {
-			auto ptr = (const glm::quat*)obj;
-			auto euler = glm::eulerAngles(*ptr);
-			std::cout << "quat{" << glm::degrees(euler.x) << " " << glm::degrees(euler.y) << " " << glm::degrees(euler.z) << std::endl;
+		bool render_fields(void* data, const std::string& prefix, struct World& world) {
+			return render_fields_primitive((glm::quat*)data, prefix);
 		}
 	};
 

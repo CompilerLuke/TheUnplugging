@@ -29,7 +29,7 @@ struct FramebufferSettings {
 	unsigned int height = 0;
 	DepthBufferSettings depth_buffer;
 	AttachmentSettings* depth_attachment = NULL;
-	std::vector<AttachmentSettings> color_attachments;
+	vector<AttachmentSettings> color_attachments;
 };
 
 struct Framebuffer {

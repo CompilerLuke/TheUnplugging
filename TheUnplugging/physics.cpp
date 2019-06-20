@@ -43,7 +43,8 @@ PhysicsSystem::~PhysicsSystem() {
 }
 
 void PhysicsSystem::update(World& world, UpdateParams& params) {
-	step_BulletWrapper(bt_wrapper);
+	if (params.layermask & game_layer) 
+		step_BulletWrapper(bt_wrapper, params.delta_time);
 
 	for (ID id : world.filter<RigidBody, Transform>(params.layermask)) {
 		auto rb = world.by_id<RigidBody>(id);

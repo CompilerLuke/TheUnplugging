@@ -16,7 +16,7 @@ void render_quad() {
 		};
 
 		glm::vec2 tex_coords[4] = {
-			glm::vec2(0, 1),   // top right
+			glm::vec2(1, 1),   // top right
 			glm::vec2(1, 0.0),   // bottom right
 			glm::vec2(0, 0),   // bottom left
 			glm::vec2(0, 1)    // top left 
@@ -31,11 +31,11 @@ void render_quad() {
 			Vertex v;
 			v.position = vertices[i];
 			v.tex_coord = tex_coords[i];
-			quad_mesh.vertices.push_back(v);
+			quad_mesh.vertices.append(v);
 		}
 
 		for (int i = 0; i < 6; i++) {
-			quad_mesh.indices.push_back(indices[i]);
+			quad_mesh.indices.append(indices[i]);
 		}
 
 		quad_mesh.submit();

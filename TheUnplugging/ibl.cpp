@@ -10,7 +10,7 @@
 #include "model.h"
 #include "primitives.h"
 #include "transform.h"
-#include <iostream>
+#include "logger.h"
 
 REFLECT_STRUCT_BEGIN(Skybox)
 REFLECT_STRUCT_MEMBER(filename)
@@ -28,14 +28,15 @@ struct DrawCommandState skybox_draw_state = {
 };
 
 void Skybox::set_ibl_params(Shader& shader, World& world, RenderParams& params) {
-	auto bind_to = params.command_buffer.next_texture_index();
+	auto bind_to = params.command_buffer->next_texture_index();
 	world.by_id<Cubemap>(irradiance_cubemap)->bind_to(bind_to);
 	shader.irradianceMap.set_int(bind_to);
 	
-	bind_to = params.command_buffer.next_texture_index();
+	bind_to = params.command_buffer->next_texture_index();
 	world.by_id<Cubemap>(prefilter_cubemap)->bind_to(bind_to);
+	shader.prefilterMap.set_int(bind_to);
 
-	bind_to = params.command_buffer.next_texture_index();
+	bind_to = params.command_buffer->next_texture_index();
 	world.by_id<Texture>(brdf_LUT)->bind_to(bind_to);
 	shader.brdfLUT.set_int(bind_to);
 }
@@ -84,7 +85,7 @@ void Skybox::on_load(World& world) {
 		}
 		else
 		{
-			std::cout << "Failed to load HDR image." << std::endl;
+			log("Failed to load HDR image.");
 		}
 	}
 
@@ -133,6 +134,8 @@ void Skybox::on_load(World& world) {
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		cube->meshes[0].buffer.bind();
+
+		log(cube->meshes[0].buffer.length);
 		glDrawElements(GL_TRIANGLES, cube->meshes[0].buffer.length, GL_UNSIGNED_INT, 0);
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -294,11 +297,11 @@ Skybox* load_Skybox(World& world, const std::string& filename) {
 
 	Material mat;
 	mat.shader = world.id_of(skybox_shader);
-	mat.params.push_back(make_Param_Cubemap(skybox_shader->location("environmentMap"), sky->env_cubemap));
+	mat.params.append(make_Param_Cubemap(skybox_shader->location("environmentMap"), sky->env_cubemap));
 	mat.state = &skybox_draw_state;
 
 	auto model_renderer = world.make<ModelRenderer>(id);
-	model_renderer->materials.push_back(mat);
+	model_renderer->materials.append(mat);
 	model_renderer->model_id = world.id_of(cube_model);
 
 	auto trans = world.make<Transform>(id);

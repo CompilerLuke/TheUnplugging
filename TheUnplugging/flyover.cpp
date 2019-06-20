@@ -1,7 +1,7 @@
 #include "flyover.h"
 #include "input.h"
 #include "transform.h"
-#include <iostream>
+#include "logger.h"
 
 REFLECT_STRUCT_BEGIN(Flyover)
 REFLECT_STRUCT_MEMBER(mouse_sensitivity)

@@ -1,6 +1,6 @@
 #pragma once
 #include <glad/glad.h>
-#include <vector>
+#include "vector.h"
 
 enum NumberType {
 	Float, Int
@@ -28,7 +28,7 @@ struct VertexBuffer {
 	~VertexBuffer();
 
 	template<typename T>
-	VertexBuffer(std::vector<T>& vertices, std::vector<unsigned int>& indices, std::vector<VertexAttrib>& vertex_attribs) {
+	VertexBuffer(vector<T>& vertices, vector<unsigned int>& indices, vector<VertexAttrib>& vertex_attribs) {
 		unsigned int vao = 0;
 		unsigned int vbo = 0;
 		unsigned int ebo = 0;
@@ -40,12 +40,12 @@ struct VertexBuffer {
 		glBindVertexArray(vao);
 
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(T), vertices.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, vertices.length * sizeof(T), vertices.data, GL_STATIC_DRAW);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.length * sizeof(unsigned int), indices.data, GL_STATIC_DRAW);
 
-		for (int i = 0; i < vertex_attribs.size(); i++) {
+		for (int i = 0; i < vertex_attribs.length; i++) {
 			VertexAttrib& va = vertex_attribs[i];
 
 			glEnableVertexAttribArray(i);
@@ -55,6 +55,6 @@ struct VertexBuffer {
 		glBindVertexArray(0);
 
 		this->vao = vao;
-		this->length = (unsigned int)indices.size();
+		this->length = indices.length;
 	}
 };

@@ -1,13 +1,13 @@
 #pragma once
 #include <functional>
-#include <vector>
+#include "vector.h"
 
 template<class T>
 struct EventDispatcher {
-	std::vector<std::function<void(T)> > listeners;
+	vector<std::function<void(T)> > listeners;
 
 	void listen(std::function<void(T)> func) {
-		listeners.push_back(func);
+		listeners.append(func);
 	}
 
 	void broadcast(T mesg) {

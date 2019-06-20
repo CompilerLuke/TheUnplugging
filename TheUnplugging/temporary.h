@@ -2,8 +2,9 @@
 
 #include <cstdlib>
 #include <memory_resource>
+#include "allocator.h"
 
-struct TemporaryAllocator {
+struct TemporaryAllocator : Allocator {
 	size_t occupied;
 	size_t max_size;
 
@@ -14,19 +15,19 @@ struct TemporaryAllocator {
 	TemporaryAllocator(size_t);
 	~TemporaryAllocator();
 
-	void* alloc(size_t);
+	void* allocate(size_t) override;
 	void clear();
 };
 
 extern TemporaryAllocator temporary_allocator;
 
-#define TEMPORARY_ALLOC(name, ...) new (temporary_allocator.alloc(sizeof(name))) name(__VA_ARGS__)
-#define TEMPORARY_ARRAY(name, num) new (temporary_allocator.alloc(sizeof(name) * num)) name[num]
+#define TEMPORARY_ALLOC(name, ...) new (temporary_allocator.allocate(sizeof(name))) name(__VA_ARGS__)
+#define TEMPORARY_ARRAY(name, num) new (temporary_allocator.allocate(sizeof(name) * num)) name[num]
 
-template<class T>
+template<typename T>
 struct STDTemporaryAllocator : public std::allocator<T> {
 	T* allocate(std::size_t size) {
-		return temporary_allocator.alloc(size);
+		return temporary_allocator->alloc(size);
 	}
 
 	void deallocate(T* ptr, std::size_t) {};

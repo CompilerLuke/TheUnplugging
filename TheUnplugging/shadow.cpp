@@ -50,7 +50,7 @@ ShadowMask::ShadowMask(Window& window, World& world) {
 	FramebufferSettings settings;
 	settings.width = window.width;
 	settings.height = window.height;
-	settings.color_attachments.push_back(color_attachment);
+	settings.color_attachments.append(color_attachment);
 	settings.depth_buffer = DepthComponent24;
 
 	this->shadow_mask_map = tex;
@@ -59,7 +59,7 @@ ShadowMask::ShadowMask(Window& window, World& world) {
 
 void ShadowMask::set_shadow_params(Shader& shader, World& world, RenderParams& params) {
 	auto tex = world.by_id<Texture>(shadow_mask_map);
-	auto bind_to = params.command_buffer.next_texture_index();
+	auto bind_to = params.command_buffer->next_texture_index();
 	tex->bind_to(bind_to);
 	shader.shadowMaskMap.set_int(bind_to);
 }
@@ -145,7 +145,7 @@ void calc_ortho_proj(RenderParams& params, glm::mat4& light_m, float width, floa
 void DepthMap::render_maps(World& world, RenderParams& params, glm::mat4 projection_m, glm::mat4 view_m) {
 	CommandBuffer command_buffer;
 
-	for (auto cmd : params.command_buffer.commands) { //makes copy of command
+	for (DrawCommand cmd : params.command_buffer->commands) { //makes copy of command
 		auto shad = world.by_id<Shader>(cmd.material->shader);
 		if (!shad) continue;
 
@@ -160,7 +160,7 @@ void DepthMap::render_maps(World& world, RenderParams& params, glm::mat4 project
 	}
 
 	RenderParams new_params = params;
-	new_params.command_buffer = command_buffer;
+	new_params.command_buffer = &command_buffer;
 	new_params.view = view_m;
 	new_params.projection = projection_m;
 
@@ -169,7 +169,7 @@ void DepthMap::render_maps(World& world, RenderParams& params, glm::mat4 project
 
 	this->depth_map_FBO.clear_depth(glm::vec4(0, 0, 0, 1));
 	
-	new_params.pass = *this;
+	new_params.pass = this;
 	command_buffer.submit_to_gpu(world, new_params);
 
 	this->depth_map_FBO.unbind();
@@ -244,6 +244,7 @@ void ShadowPass::render(World& world, RenderParams& params) {
 		shadow_params.to_light = proj_info.toLight;
 		shadow_params.to_world = proj_info.toWorld;
 		shadow_params.cascade = i;
+		shadow_params.depth_map = this->depth_prepass;
 
 		volumetric.render_with_cascade(world, params, shadow_params);
 	}
