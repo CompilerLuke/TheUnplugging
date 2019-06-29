@@ -158,7 +158,6 @@ struct World {
 
 	std::unique_ptr<ComponentStore> components[components_hash_size];
 	vector<std::unique_ptr<System>> systems;
-	Level level;
 
 	template<typename T>
 	constexpr void add(Store<T>* store) {

@@ -4,6 +4,7 @@
 #include <assimp/vector3.h>
 #include <assimp/vector2.h>
 #include <assimp/postprocess.h>
+#include "rhi.h"
 
 Mesh process_mesh(aiMesh* mesh, const aiScene* scene, vector<std::string>& materials) {
 	auto vertices = vector<Vertex>();
@@ -93,8 +94,8 @@ void process_node(aiNode* node, const aiScene* scene, vector<Mesh>& meshes, vect
 	}
 }
 
-void Model::load_in_place(World& world) {
-	auto real_path = world.level.asset_path(this->path);
+void Model::load_in_place() {
+	auto real_path = Level::asset_path(this->path);
 	
 	Assimp::Importer importer;
 	auto scene = importer.ReadFile(real_path.c_str(), aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
@@ -109,16 +110,17 @@ void Model::load_in_place(World& world) {
 	this->materials = std::move(materials);
 }
 
-Model* load_Model(World& world, const std::string& path) {
-	for (auto existing_model : world.filter<Model>(any_layer)) {
-		if (existing_model->path == path) return existing_model;
+Handle<Model> load_Model(World& world, const std::string& path) {
+	for (int i = 0; i < RHI::model_manager.slots.length; i++) {
+		auto& slot = RHI::model_manager.slots[i];
+		if (slot.generation != INVALID_SLOT && slot.obj.path == path) {
+			return RHI::model_manager.index_to_handle(i);
+		}
 	}
 
-	ID id = world.make_ID();
-	auto entity = world.make<Entity>(id);
-	auto model = world.make<Model>(id);
-	model->path = path;
-	model->load_in_place(world);
-	return model;
+	Model model;
+	model.path = path;
+	model.load_in_place();
+	return RHI::model_manager.make(std::move(model));
 }
 

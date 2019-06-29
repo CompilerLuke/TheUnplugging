@@ -18,6 +18,9 @@
 #include "transform.h"
 #include "camera.h"
 #include "flyover.h"
+#include "rhi.h"
+#include "custom_inspect.h"
+#include "picking.h"
 
 //theme by Derydoca 
 void set_darcula_theme() {
@@ -35,7 +38,7 @@ void set_darcula_theme() {
 	colors[ImGuiCol_FrameBgHovered] = ImVec4(0.200f, 0.200f, 0.200f, 1.000f);
 	colors[ImGuiCol_FrameBgActive] = ImVec4(0.280f, 0.280f, 0.280f, 1.000f);
 	colors[ImGuiCol_TitleBg] = ImVec4(0.12f, 0.12f, 0.12f, 1.000f);
-	colors[ImGuiCol_TitleBgActive] = ImVec4(0.148f, 0.148f, 0.148f, 1.000f);
+	colors[ImGuiCol_TitleBgActive] = ImVec4(0.12f, 0.12f, 0.12f, 1.000f);
 	colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.148f, 0.148f, 0.148f, 1.000f);
 	colors[ImGuiCol_MenuBarBg] = ImVec4(0.12f, 0.12f, 0.12f, 1.000f);
 	colors[ImGuiCol_ScrollbarBg] = ImVec4(0.160f, 0.160f, 0.160f, 1.000f);
@@ -99,16 +102,27 @@ void override_key_callback(GLFWwindow* window_ptr, int key, int scancode, int ac
 	}
 }
 
+void override_mouse_button_callback(GLFWwindow* window_ptr, int button, int action, int mods) {
+	auto window = (Window*)glfwGetWindowUserPointer(window_ptr);
+	
+	ImGui_ImplGlfw_MouseButtonCallback(window_ptr, button, action, mods);
+
+	if (!ImGui::GetIO().WantCaptureMouse) {
+		window->on_mouse_button.broadcast({ button, action, mods });
+	}
+}
+
 void Editor::select(ID id) {
 	this->selected_id = id;
 }
 
-Editor::Editor(std::string& level, void (*register_systems_and_components)(World&), Window& window)
-: window(window) {
-	world.level.set_level(level);
-
+Editor::Editor(void (*register_systems_and_components)(World&), Window& window)
+: window(window), picking_pass(window) {
 	register_systems_and_components(world);
 	world.add(new Store<EntityEditor>(100));
+	
+	register_on_inspect_callbacks();
+	this->picking_pass = PickingPass(window);
 }
 
 void Editor::init_imgui() {
@@ -124,7 +138,7 @@ void Editor::init_imgui() {
 
 	ImFontConfig icons_config; icons_config.MergeMode = false; icons_config.PixelSnapH = true; icons_config.FontDataOwnedByAtlas = true; icons_config.FontDataSize = 72;
 
-	auto font_path = world.level.asset_path("fonts/segoeui.ttf");
+	auto font_path = Level::asset_path("fonts/segoeui.ttf");
 	ImFont* font = io.Fonts->AddFontFromFileTTF(font_path.c_str(), 32.0f, &icons_config, io.Fonts->GetGlyphRangesDefault());
 
 	set_darcula_theme();
@@ -134,12 +148,13 @@ void Editor::init_imgui() {
 
 	glfwSetKeyCallback(window.window_ptr, override_key_callback);
 	glfwSetCharCallback(window.window_ptr, ImGui_ImplGlfw_CharCallback);
+	glfwSetMouseButtonCallback(window.window_ptr, override_mouse_button_callback);
 }
 
-unsigned int Editor::get_icon(const std::string& name) {
+ImTextureID Editor::get_icon(const std::string& name) {
 	for (auto icon : icons) {
 		if (icon.name == name) {
-			return world.by_id<Texture>(icon.texture_id)->texture_id;
+			return (ImTextureID) RHI::texture_manager.get(icon.texture_id)->texture_id;
 		}
 	}
 	
@@ -155,11 +170,11 @@ void Editor::run() {
 	Time time;
 
 	icons = {
-		{"play", world.id_of(load_Texture(world, "editor/play_button3.png"))}
+		{"play", load_Texture("editor/play_button3.png")}
 	};
 
-	auto shader = load_Shader(world, "shaders/pbr.vert", "shaders/gizmo.frag");
-	auto texture = load_Texture(world, "normal.jpg");
+	auto shader = load_Shader("shaders/pbr.vert", "shaders/gizmo.frag");
+	auto texture = load_Texture("normal.jpg");
 	auto model = load_Model(world, "HOVERTANK.fbx");
 	auto skybox = load_Skybox(world, "Tropical_Beach_3k.hdr");
 
@@ -175,8 +190,14 @@ void Editor::run() {
 
 	CommandBuffer cmd_buffer;
 	MainPass main_pass(world, window);
-
 	RenderParams render_params(&cmd_buffer, &main_pass);
+
+	main_pass.post_process.append(&picking_pass);
+
+	PickingSystem* picking_system = new PickingSystem(*this);
+
+	world.add(picking_system);
+	
 	UpdateParams update_params(input);
 
 	auto model_renderer_id = world.make_ID();
@@ -207,17 +228,15 @@ void Editor::run() {
 
 	Material material = {
 		std::string("DefaultMaterial"),
-		world.id_of(load_Shader(world, "shaders/pbr.vert", "shaders/pbr.frag")),
+		load_Shader("shaders/pbr.vert", "shaders/pbr.frag"),
 		params,
 		&default_draw_state
 	};
 	vector<Material> materials = { material };
 
 	auto model_render = world.make<ModelRenderer>(model_renderer_id);
-	model_render->model_id = world.id_of(model);
+	model_render->model_id = model;
 	model_render->set_materials(world, materials);
-
-	glEnable(GL_DEPTH_TEST);
 
 	while (!window.should_close() && !exit) {
 		temporary_allocator.clear();
@@ -239,6 +258,7 @@ void Editor::run() {
 		update(update_params);
 
 		render_params.pass->render(world, render_params);
+		
 		render(render_params);
 
 		window.swap_buffers();
@@ -255,6 +275,10 @@ void Editor::update(UpdateParams& params) {
 
 	if (params.input.key_pressed(GLFW_KEY_L)) {
 		log("about to serialize");
+	}
+
+	if (params.input.mouse_button_pressed(MouseButton::Left)) {
+		this->selected_id = picking_pass.pick(world, params);
 	}
 
 	display_components.update(world, params);
@@ -291,11 +315,29 @@ void Editor::render(RenderParams& params) {
 	ImGui::Begin("DockSpace Demo", &p_open, window_flags);
 	ImGui::PopStyleVar(3);
 
-	ImGui::BeginMenuBar();
-	ImGui::MenuItem("File");
-	ImGui::MenuItem("Edit");
-	ImGui::MenuItem("Settings");
-	ImGui::EndMenuBar();
+	ImGui::BeginMainMenuBar();
+	if (ImGui::BeginMenu("File")) {
+		ImGui::MenuItem("New Scene", "CTRL+N");
+		ImGui::MenuItem("Open Scene");
+		ImGui::MenuItem("Recents");
+		ImGui::MenuItem("Save", "CTRL+S");
+		ImGui::MenuItem("Exit", "ALT+F4");
+		ImGui::EndMenu();
+	}
+	
+	if (ImGui::BeginMenu("Edit")) {
+		ImGui::MenuItem("Copy", "CTRL+C");
+		ImGui::MenuItem("Paste", "CTRL+V");
+		ImGui::MenuItem("Duplicate", "CTRL+D");
+		ImGui::EndMenu();
+	}
+
+	if (ImGui::BeginMenu("Settings")) {
+		ImGui::EndMenu();
+	}
+
+	ImGui::EndMainMenuBar();
+
 
 	ImGuiID dockspace_id = ImGui::GetID("MyDockspace");
 	ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
@@ -304,7 +346,7 @@ void Editor::render(RenderParams& params) {
 
 	ImGui::Begin("Controls", &p_open, ImGuiWindowFlags_NoDecoration);
 	
-	ImGui::ImageButton((ImTextureID)get_icon("play"), ImVec2(40, 40));
+	ImGui::ImageButton(get_icon("play"), ImVec2(40, 40));
 	ImGui::Button("Play");
 	ImGui::SameLine();
 	ImGui::Button("Pause");

@@ -16,13 +16,10 @@ void register_default_systems_and_components(World& world) {
 	world.add(new Store<Entity>(100));
 	world.add(new Store<Transform>(10));
 	world.add(new Store<LocalTransform>(10));
-	world.add(new Store<Shader>(20));
-	world.add(new Store<Model>(10));
+	world.add(new Store<Materials>(10));
 	world.add(new Store<ModelRenderer>(10));
 	world.add(new Store<Camera>(3));
 	world.add(new Store<Flyover>(1));
-	world.add(new Store<Texture>(20));
-	world.add(new Store<Cubemap>(10));
 	world.add(new Store<DirLight>(2));
 	world.add(new Store<Skybox>(1));
 

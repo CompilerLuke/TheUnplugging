@@ -9,6 +9,7 @@
 #include "displayComponents.h"
 #include "ecs.h"
 #include "gizmo.h"
+#include "picking.h"
 
 struct DroppableField {
 	void* ptr;
@@ -35,12 +36,14 @@ struct DeleteComponent {
 
 struct Icon {
 	std::string name;
-	ID texture_id;
+	Handle<struct Texture> texture_id;
 };
 
 struct Editor {
 	World world;
 	Window& window;
+
+	PickingPass picking_pass;
 
 	int selected_id = -1;
 	float editor_tab_width = 0.25;
@@ -50,7 +53,7 @@ struct Editor {
 
 	vector<Icon> icons;
 
-	unsigned int get_icon(const std::string& name);
+	ImTextureID get_icon(const std::string& name);
 	
 	ModelAssetTab asset_tab;
 	Lister lister;
@@ -62,7 +65,7 @@ struct Editor {
 
 	EventDispatcher<ID> selected;
 
-	Editor(std::string& level, void (*)(World&), struct Window&);
+	Editor(void (*)(World&), struct Window&);
 	~Editor();
 
 	void update(struct UpdateParams&);

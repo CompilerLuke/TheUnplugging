@@ -2,8 +2,8 @@
 #include <string>
 #include <fstream>
 
-struct Level {
-	std::string asset_folder_path;
+namespace Level {
+	extern std::string asset_folder_path;
 
 	std::string asset_path(const std::string& filename);
 	std::string to_asset_path(const std::string& filename);
@@ -15,6 +15,6 @@ struct Level {
 struct File {
 	std::ifstream fstream;
 
-	File(Level&, const std::string&);
+	File(const std::string&);
 	std::string read();
 };

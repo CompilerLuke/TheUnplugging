@@ -1,5 +1,7 @@
 #include "draw.h"
+#include "rhi.h"
 #include <glad/glad.h>
+#include "sort.h"
 
 REFLECT_BEGIN_ENUM(DrawOrder)
 REFLECT_ENUM_VALUE(draw_opaque)
@@ -19,11 +21,24 @@ REFLECT_ENUM_VALUE(DepthFunc_Less)
 REFLECT_ENUM_VALUE(DepthFunc_Lequal)
 REFLECT_END_ENUM()
 
+REFLECT_BEGIN_ENUM(StencilOp)
+REFLECT_ENUM_VALUE(Stencil_Keep_Replace)
+REFLECT_END_ENUM()
+
+REFLECT_BEGIN_ENUM(StencilFunc)
+REFLECT_ENUM_VALUE(StencilFunc_Equal)
+REFLECT_ENUM_VALUE(StencilFunc_NotEqual)
+REFLECT_END_ENUM()
+
 REFLECT_STRUCT_BEGIN(DrawCommandState)
 REFLECT_STRUCT_MEMBER(cull)
 REFLECT_STRUCT_MEMBER(depth_func)
 REFLECT_STRUCT_MEMBER(clear_depth_buffer)
+REFLECT_STRUCT_MEMBER(clear_stencil_buffer)
 REFLECT_STRUCT_MEMBER(order)
+REFLECT_STRUCT_MEMBER(stencil_func)
+REFLECT_STRUCT_MEMBER(stencil_op)
+REFLECT_STRUCT_MEMBER(stencil_mask)
 REFLECT_STRUCT_END()
 
 #include "texture.h"
@@ -67,18 +82,14 @@ void CommandBuffer::clear() {
 	commands.reserve(50);
 }
 
-bool compare_key(DrawCommand& cmd1, DrawCommand& cmd2) {
-	return cmd1.key < cmd2.key;
-}
-
 int can_instance(vector<DrawCommand>& commands, int i, World& world) {
 	auto count = 1;
 
-	auto shader = world.by_id<Shader>(commands[i].material->shader);
+	auto shader = RHI::shader_manager.get(commands[i].material->shader);
 	if (!shader) return 0;
 
-	auto instanced_version = shader->instanced_version.get();
-	if (!instanced_version) return 0;
+	auto instanced_version = shader->instanced_version;
+	if (instanced_version.id == INVALID_HANDLE) return 1;
 
 	while (i + 1 < commands.length) {
 		if (commands[i].key != commands[i + 1].key) break;
@@ -90,30 +101,38 @@ int can_instance(vector<DrawCommand>& commands, int i, World& world) {
 	return count;
 }
 
-void switch_shader(World& world, RenderParams& params, ID shader_id, bool instanced) {
-	auto shader = world.by_id<Shader>(shader_id);
-	if (!shader) return;
+void switch_shader(World& world, RenderParams& params, Handle<Shader> shader_id, bool instanced) {
+	auto shader = RHI::shader_manager.get(shader_id);
 
 	if (instanced) {
-		auto instanced_shader = shader->instanced_version.get();
-		if (!instanced_shader) return;
-
-		shader = instanced_shader;
+		auto instanced_shader = shader->instanced_version;
+		shader = RHI::shader_manager.get(instanced_shader);
 	}
 
 	shader->bind();
 	params.command_buffer->current_texture_index = 0;
-	params.set_shader_scene_params(*shader, world);
+	params.set_shader_scene_params(shader_id, world);
 }
 
 void depth_func_bind(DepthFunc func) {
 	switch (func) {
-	case DepthFunc_Lequal: glDepthFunc(GL_LEQUAL); break;
-	case DepthFunc_Less: glDepthFunc(GL_LESS); break;
+	case DepthFunc_Lequal: 
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LEQUAL);
+		break;
+	case DepthFunc_Less: 
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS); 
+		break;
+	case DepthFunc_None:
+		glDisable(GL_DEPTH_TEST);
+		break;
 	}
 }
 
 void cull_bind(Cull cull) {
+
+
 	switch (cull) {
 	case Cull_None: 
 		glDisable(GL_CULL_FACE); 
@@ -129,49 +148,66 @@ void cull_bind(Cull cull) {
 	}
 }
 
+
+void stencil_func_bind(StencilFunc func) {
+
+	switch (func) {
+	case StencilFunc_None:
+		glDisable(GL_STENCIL_TEST);
+		return;
+	case StencilFunc_Equal:
+		glEnable(GL_STENCIL_TEST);
+		glStencilFunc(GL_EQUAL, 1, 0xFF);
+		return;
+	case StencilFunc_NotEqual:
+		glEnable(GL_STENCIL_TEST);
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		return;
+	case StencilFunc_Always:
+		glEnable(GL_STENCIL_TEST);
+		glStencilFunc(GL_ALWAYS, 1, 0xFF);
+		return;
+	};
+}
+
+void stencil_op_bind(StencilOp op) {
+	if (op == Stencil_Keep_Replace) glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+}
+
 void set_params(CommandBuffer& command_buffer, Material& mat, World& world) {
 	auto& params = mat.params;
-	auto shader = world.by_id<Shader>(mat.shader);
-	if (!shader) return;
+	auto shader = mat.shader;
 
 	auto previous_num_tex_index = command_buffer.current_texture_index;
 
 	for (auto &param : params) {
 		switch (param.type) {
 		case Param_Vec3:
-			param.loc.set_vec3(param.vec3);
+			shader::set_vec3(shader, param.loc, param.vec3);
 			break;
 		
 		case Param_Vec2:
-			param.loc.set_vec2(param.vec2);
+			shader::set_vec2(shader, param.loc, param.vec2);
 			break;
 
 		case Param_Mat4x4:
-			param.loc.set_mat4(param.matrix); 
+			shader::set_mat4(shader, param.loc, param.matrix); 
 			break;
 
 		case Param_Image: {
-			auto tex = world.by_id<Texture>(param.image);
-			if (!tex) continue;
-
 			auto index = command_buffer.next_texture_index();
-			tex->bind_to(index);
-			param.loc.set_int(index);
+			texture::bind_to(param.image, index);
+			shader::set_int(shader, param.loc, index);
 			break;
 		}
 		case Param_Cubemap: {
-			auto tex = world.by_id<Cubemap>(param.cubemap);
-			if (!tex) continue;
-
 			auto index = command_buffer.next_texture_index();
-
-
-			tex->bind_to(index);
-			param.loc.set_int(index);
+			cubemap::bind_to(param.cubemap, index);
+			shader::set_int(shader, param.loc, index);
 			break;
 		}
 		case Param_Int:
-			param.loc.set_int(param.integer);
+			shader::set_int(shader, param.loc, param.integer);
 			break;
 		}
 	}
@@ -183,6 +219,8 @@ bool operator!=(Material& mat1, Material& mat2) {
 	return std::memcmp(&mat1, &mat2, sizeof(Material)) != 0;
 }
 
+#include <iostream>
+
 void CommandBuffer::submit_to_gpu(World& world, RenderParams& render_params) {
 	//todo culling
 	for (auto &cmd : commands) {
@@ -190,11 +228,11 @@ void CommandBuffer::submit_to_gpu(World& world, RenderParams& render_params) {
 			    + ((long long)cmd.material->state->depth_func << 32)
 			    + (cmd.material->state->cull << 30) 
 			    + (cmd.buffer->vao << 15) 
-			    + (cmd.material->shader << 7) 
+			    + (cmd.material->shader.id << 7) 
 			    + ((long long)cmd.material % 64);
 	}
 
-	//std::sort(commands.begin(), commands.end(), compare_key);
+	radixsort(commands.data, commands.length, [](DrawCommand& cmd) { return cmd.key; });
 	bool last_was_instanced = false;
 
 	for (int i = 0; i < commands.length;) {
@@ -212,13 +250,19 @@ void CommandBuffer::submit_to_gpu(World& world, RenderParams& render_params) {
 			if (mat.state->clear_depth_buffer) {
 				glClear(GL_DEPTH_BUFFER_BIT);
 			}
+			if (mat.state->clear_stencil_buffer) {
+				glClear(GL_STENCIL_BUFFER_BIT);
+			}
+			stencil_op_bind(mat.state->stencil_op);
+			stencil_func_bind(mat.state->stencil_func);
+			glStencilMask(mat.state->stencil_mask);
 			set_params(*this, mat, world);
 		}
 		else {
 			auto& last_cmd = commands[i - 1];
 			auto& last_mat = *last_cmd.material;
 
-			if ((last_mat.shader != mat.shader) || last_was_instanced) {
+			if ((last_mat.shader.id != mat.shader.id) || last_was_instanced) {
 				switch_shader(world, render_params, mat.shader, instanced);
 			}
 
@@ -231,7 +275,23 @@ void CommandBuffer::submit_to_gpu(World& world, RenderParams& render_params) {
 			}
 
 			if (last_mat.state->depth_func != mat.state->depth_func) {
-				depth_func_bind(last_mat.state->depth_func);
+				depth_func_bind(mat.state->depth_func);
+			}
+
+			if (last_mat.state->stencil_op != mat.state->stencil_op) {
+				stencil_op_bind(mat.state->stencil_op);
+			}
+
+			if (last_mat.state->stencil_func != mat.state->stencil_func) {
+				stencil_func_bind(mat.state->stencil_func);
+			}
+
+			if (last_mat.state->stencil_mask != mat.state->stencil_mask) {
+				glStencilMask(mat.state->stencil_mask);
+			}
+
+			if (mat.state->clear_stencil_buffer && !last_mat.state->clear_stencil_buffer) {
+				glClear(GL_STENCIL_BUFFER_BIT);
 			}
 
 			if (mat.state->clear_depth_buffer && !last_mat.state->clear_depth_buffer) {
@@ -281,11 +341,15 @@ void CommandBuffer::submit_to_gpu(World& world, RenderParams& render_params) {
 			}
 		}
 		else {
-			auto shader = world.by_id<Shader>(mat.shader);
-			if (shader == NULL) { continue; }
-
-			shader->model.set_mat4(*cmd.model_m);
-			glDrawElements(GL_TRIANGLES, cmd.buffer->length, GL_UNSIGNED_INT, NULL);
+			shader::set_mat4(mat.shader, "model", *cmd.model_m); //todo cache model uniform lookup
+			if (cmd.material->state->mode == DrawSolid) {
+				glDrawElements(GL_TRIANGLES, cmd.buffer->length, GL_UNSIGNED_INT, NULL);
+			}
+			else {
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				glDrawElements(GL_TRIANGLES, cmd.buffer->length, GL_UNSIGNED_INT, NULL);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			}
 			i += 1;
 		}
 		last_was_instanced = instanced;

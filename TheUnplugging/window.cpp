@@ -73,8 +73,7 @@ void Window::init() {
 		throw "Failed to initialize GLAD!";
 	}
 
-
-	//glEnable(GL_DEBUG_OUTPUT);
+	glEnable(GL_DEBUG_OUTPUT);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(gl_error_callback, this); 
 

@@ -5,8 +5,10 @@
 #include <sys/stat.h>
 #include <sstream>
 
+std::string Level::asset_folder_path;
+
 void Level::set_level(const std::string& asset_folder_path) {
-	this->asset_folder_path = asset_folder_path;
+	Level::asset_folder_path = asset_folder_path;
 }
 
 std::string Level::asset_path(const std::string& filename) {
@@ -22,8 +24,8 @@ std::string Level::to_asset_path(const std::string& filename) {
 	throw "File not in asset path";
 }
 
-File::File(Level& level, const std::string& filename) {
-	auto full_path = level.asset_path(filename);
+File::File(const std::string& filename) {
+	auto full_path = Level::asset_path(filename);
 
 	fstream.open(full_path);
 	if (fstream.fail()) {

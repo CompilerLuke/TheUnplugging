@@ -1,7 +1,16 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "texture.h"
 #include "ecs.h"
+#include "rhi.h"
 #include "glad/glad.h"
+
+REFLECT_GENERIC_STRUCT_BEGIN(Handle<Texture>)
+REFLECT_STRUCT_MEMBER(id)
+REFLECT_STRUCT_END()
+
+REFLECT_GENERIC_STRUCT_BEGIN(Handle<Cubemap>)
+REFLECT_STRUCT_MEMBER(id)
+REFLECT_STRUCT_END()
 
 REFLECT_STRUCT_BEGIN(Texture)
 REFLECT_STRUCT_MEMBER(filename)
@@ -11,8 +20,8 @@ REFLECT_STRUCT_BEGIN(Cubemap)
 REFLECT_STRUCT_MEMBER(filename)
 REFLECT_STRUCT_END()
 
-void Texture::on_load(World& world) {
-	auto real_filename = world.level.asset_path(filename);
+void Texture::on_load() {
+	auto real_filename = Level::asset_path(filename);
 
 	stbi_set_flip_vertically_on_load(true);
 
@@ -43,42 +52,41 @@ void Texture::on_load(World& world) {
 	this->texture_id = texture_id;
 }
 
-Texture* make_Texture(World& world) {
-	ID id = world.make_ID();
-	auto e = world.make<Entity>(id);
-	e->layermask = game_layer;
-	auto texture = world.make<Texture>(id);
-	return texture;
+Handle<Texture> make_Texture(Texture&& tex) {
+	return RHI::texture_manager.make(std::move(tex));
 }
 
-Cubemap* make_Cubemap(World& world) {
-	ID id = world.make_ID();
-	auto e = world.make<Entity>(id);
-	e->layermask = game_layer;
-	auto texture = world.make<Cubemap>(id);
-	return texture;
+Handle<Cubemap> make_Cubemap(Cubemap&& tex) {
+	return RHI::cubemap_manager.make(std::move(tex));
 }
 
-void Texture::bind_to(unsigned int num) {
-	glActiveTexture(GL_TEXTURE0 + num);
-	glBindTexture(GL_TEXTURE_2D, texture_id);
+namespace texture {
+	void bind_to(Handle<Texture> handle, unsigned int num) {
+		Texture* tex = RHI::texture_manager.get(handle);
+		glActiveTexture(GL_TEXTURE0 + num);
+		glBindTexture(GL_TEXTURE_2D, tex->texture_id);
+	}
 }
 
-void Cubemap::bind_to(unsigned int num) {
-	glActiveTexture(GL_TEXTURE0 + num);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id);
+namespace cubemap {
+	void bind_to(Handle<Cubemap> handle, unsigned int num) {
+		Cubemap* tex = RHI::cubemap_manager.get(handle);
+		glActiveTexture(GL_TEXTURE0 + num);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, tex->texture_id);
+	}
 }
 
-Texture* load_Texture(World& world, const std::string& filename) {
-	for (auto texture : world.filter<Texture>(any_layer)) {
-		if (texture->filename == filename) return texture;
+Handle<Texture> load_Texture(const std::string& filename) {
+	for (int i = 0; i < RHI::texture_manager.slots.length; i++) { //todo move out into Texture manager
+		auto& slot = RHI::texture_manager.slots[i];
+		if (slot.generation != INVALID_HANDLE && slot.obj.filename == filename) {
+			return RHI::texture_manager.index_to_handle(i);
+		}
 	}
 
-	ID id = world.make_ID();
-	auto e = world.make<Entity>(id);
-	auto texture = world.make<Texture>(id);
-	texture->filename = filename;
-	texture->on_load(world);
-	return texture;
+	Texture texture;
+	texture.filename = filename;
+	texture.on_load();
+	return RHI::texture_manager.make(std::move(texture));
 }
 

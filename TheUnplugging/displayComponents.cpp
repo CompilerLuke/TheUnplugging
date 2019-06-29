@@ -5,6 +5,13 @@
 #include "ecs.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <tuple>
+#include "rhi.h"
+
+std::unordered_map <std::string, OnInspectGUICallback> override_inspect;
+
+void register_on_inspect_gui(const std::string& on_type, OnInspectGUICallback func) {
+	override_inspect[on_type] = func;
+}
 
 bool render_fields_primitive(glm::quat* ptr, const std::string& prefix) {
 	glm::vec3 euler = glm::eulerAngles(*ptr);
@@ -67,47 +74,11 @@ bool reflect::TypeDescriptor::render_fields(void* data, const std::string& prefi
 	return false;
 }
 
-#include "model.h"
-
-bool render_fields_tag(void* data, reflect::TypeTag tag, const std::string& prefix, World& world) {
-	if (tag == reflect::LayermaskTag) {
-		Layermask* mask_ptr = (Layermask*)(data);
-		Layermask mask = *mask_ptr;
-		if (ImGui::RadioButton("game", mask & game_layer)) {
-			mask ^= game_layer;
-		}
-
-		ImGui::SameLine();
-
-		if (ImGui::RadioButton("editor", mask & editor_layer)) {
-			mask ^= editor_layer;
-		}
-
-		ImGui::SameLine();
-		ImGui::Text("layermask");
-
-		*mask_ptr = mask;
-	}
-	else if (tag == reflect::ModelIDTag) {
-		int model_id = *(int*)(data);
-		if (model_id < 0) {
-			ImGui::LabelText("name", "unselected");
-			return true;
-		}
-
-		Model* model = world.by_id<Model>(model_id);
-		if (model) {
-			auto quoted = "\"" + model->path + "\"";
-			ImGui::LabelText("name", quoted.c_str());
-		}
-		else {
-			ImGui::LabelText("name", "unselected");
-		}
-	}
-	return true;
-}
-
 bool reflect::TypeDescriptor_Struct::render_fields(void* data, const std::string& prefix, World& world) {
+	if (override_inspect.find(this->getFullName()) != override_inspect.end()) {
+		return override_inspect[this->getFullName()](data, this, prefix, world);
+	}
+	
 	auto name = prefix + " : " + this->getFullName();
 
 	auto id = ImGui::GetID(name.c_str());
@@ -120,17 +91,19 @@ bool reflect::TypeDescriptor_Struct::render_fields(void* data, const std::string
 
 	bool open;
 	if (prefix == "Component") {
-		open = ImGui::CollapsingHeader(name.c_str(), ImGuiTreeNodeFlags_Framed);
+		open = ImGui::CollapsingHeader(this->getFullName().c_str(), ImGuiTreeNodeFlags_Framed);
 	}
 	else {
 		open = ImGui::TreeNode(name.c_str());
 	}
+
 	if (open) {
 		for (auto field : this->members) {
 			auto offset_ptr = (char*)data + field.offset;
-			if (field.tag != 0) {
-				render_fields_tag(offset_ptr, field.tag, field.name, world);
-			} 
+			
+			if (field.tag == LayermaskTag) {
+				override_inspect["Layermask"](data, this, prefix, world);
+			}
 			else {
 				field.type->render_fields(offset_ptr, field.name, world);
 			}
@@ -145,13 +118,6 @@ bool reflect::TypeDescriptor_Union::render_fields(void* data, const std::string&
 	int tag = *((char*)data + this->tag_offset);
 
 	auto name = prefix + " : " + this->getFullName();
-
-	if (this->getFullName() == "Param") {
-		auto ptr = (Param*)data;
-		auto& union_case = cases[tag];
-		union_case.type->render_fields((char*)data + union_case.offset, ptr->loc.name, world);
-		return true;
-	}
 
 	if (ImGui::TreeNode(name.c_str())) {
 		int i = 0;
@@ -246,8 +212,6 @@ void DisplayComponents::render(World& world, RenderParams& params, Editor& edito
 			auto components = world.components_by_id(editor.selected_id);
 
 			for (auto& comp : components) {
-				if (comp.type->getFullName() == "EntityEditor") continue;
-
 				ImGui::BeginGroup();
 				if (uncollapse)
 					ImGui::SetNextTreeNodeOpen(true);

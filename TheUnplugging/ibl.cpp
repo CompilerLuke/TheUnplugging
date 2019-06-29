@@ -10,6 +10,7 @@
 #include "model.h"
 #include "primitives.h"
 #include "transform.h"
+#include "rhi.h"
 #include "logger.h"
 
 REFLECT_STRUCT_BEGIN(Skybox)
@@ -27,27 +28,27 @@ struct DrawCommandState skybox_draw_state = {
 	draw_skybox
 };
 
-void Skybox::set_ibl_params(Shader& shader, World& world, RenderParams& params) {
+void Skybox::set_ibl_params(Handle<Shader> shader, World& world, RenderParams& params) {
 	auto bind_to = params.command_buffer->next_texture_index();
-	world.by_id<Cubemap>(irradiance_cubemap)->bind_to(bind_to);
-	shader.irradianceMap.set_int(bind_to);
+	cubemap::bind_to(irradiance_cubemap, bind_to);
+	shader::set_int(shader, "irradianceMap", bind_to);
 	
 	bind_to = params.command_buffer->next_texture_index();
-	world.by_id<Cubemap>(prefilter_cubemap)->bind_to(bind_to);
-	shader.prefilterMap.set_int(bind_to);
+	cubemap::bind_to(prefilter_cubemap, bind_to);
+	shader::set_int(shader, "prefilterMap", bind_to);
 
 	bind_to = params.command_buffer->next_texture_index();
-	world.by_id<Texture>(brdf_LUT)->bind_to(bind_to);
-	shader.brdfLUT.set_int(bind_to);
+	texture::bind_to(brdf_LUT, bind_to);
+	shader::set_int(shader, "brdfLUT", bind_to);
 }
 
 void Skybox::on_load(World& world) {
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-	auto equirectangular_to_cubemap_shader = load_Shader(world, "shaders/eToCubemap.vert", "shaders/eToCubemap.frag");
-	auto irradiance_shader = load_Shader(world, "shaders/irradiance.vert", "shaders/irradiance.frag");
+	auto equirectangular_to_cubemap_shader = load_Shader("shaders/eToCubemap.vert", "shaders/eToCubemap.frag");
+	auto irradiance_shader = load_Shader("shaders/irradiance.vert", "shaders/irradiance.frag");
 	auto cube = load_Model(world, "cube.fbx");
-
+	auto cube_model = RHI::model_manager.get(cube);
 
 	int width = 2048;
 	int height = 2048;
@@ -69,7 +70,7 @@ void Skybox::on_load(World& world) {
 	{
 		stbi_set_flip_vertically_on_load(true);
 		int width, height, nrComponents;
-		float *data = stbi_loadf(world.level.asset_path(filename).c_str(), &width, &height, &nrComponents, 0);
+		float *data = stbi_loadf(Level::asset_path(filename).c_str(), &width, &height, &nrComponents, 0);
 		if (data)
 		{
 			glGenTextures(1, &hdrTexture);
@@ -119,9 +120,9 @@ void Skybox::on_load(World& world) {
 
 	// pbr: convert HDR equirectangular environment map to cubemap equivalent
 	// ----------------------------------------------------------------------
-	equirectangular_to_cubemap_shader->bind();
-	equirectangular_to_cubemap_shader->location("equirectangularMap").set_int(0);
-	equirectangular_to_cubemap_shader->location("projection").set_mat4(captureProjection);
+	shader::bind(equirectangular_to_cubemap_shader);
+	shader::set_int(equirectangular_to_cubemap_shader, "equirectangularMap", 0);
+	shader::set_mat4(equirectangular_to_cubemap_shader, "projection", captureProjection);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, hdrTexture);
 
@@ -129,14 +130,13 @@ void Skybox::on_load(World& world) {
 	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
 	for (unsigned int i = 0; i < 6; ++i)
 	{
-		equirectangular_to_cubemap_shader->location("view").set_mat4(captureViews[i]);
+		shader::set_mat4(equirectangular_to_cubemap_shader, "view", captureViews[i]);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, envCubemap, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		cube->meshes[0].buffer.bind();
+		cube_model->meshes[0].buffer.bind();
 
-		log(cube->meshes[0].buffer.length);
-		glDrawElements(GL_TRIANGLES, cube->meshes[0].buffer.length, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, cube_model->meshes[0].buffer.length, GL_UNSIGNED_INT, 0);
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -161,9 +161,9 @@ void Skybox::on_load(World& world) {
 
 	// pbr: solve diffuse integral by convolution to create an irradiance (cube)map.
 	// -----------------------------------------------------------------------------
-	irradiance_shader->bind();
-	irradiance_shader->location("environmentMap").set_int(0);
-	irradiance_shader->location("projection").set_mat4(captureProjection);
+	shader::bind(irradiance_shader);
+	shader::set_int(irradiance_shader, "environmentMap", 0);
+	shader::set_mat4(irradiance_shader, "projection", captureProjection);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
 
@@ -171,12 +171,12 @@ void Skybox::on_load(World& world) {
 	glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
 	for (unsigned int i = 0; i < 6; ++i)
 	{
-		irradiance_shader->location("view").set_mat4(captureViews[i]);
+		shader::set_mat4(irradiance_shader, "view", captureViews[i]);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, irradianceMap, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		cube->meshes[0].buffer.bind();
-		glDrawElements(GL_TRIANGLES, cube->meshes[0].buffer.length, GL_UNSIGNED_INT, 0);
+		cube_model->meshes[0].buffer.bind();
+		glDrawElements(GL_TRIANGLES, cube_model->meshes[0].buffer.length, GL_UNSIGNED_INT, 0);
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -195,11 +195,11 @@ void Skybox::on_load(World& world) {
 
 	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
-	auto prefilter_shader = load_Shader(world, "shaders/prefilter.vert", "shaders/prefilter.frag");
+	auto prefilter_shader = load_Shader("shaders/prefilter.vert", "shaders/prefilter.frag");
 
-	prefilter_shader->bind();
-	prefilter_shader->location("environmentMap").set_int(0);
-	prefilter_shader->location("projection").set_mat4(captureProjection);
+	shader::bind(prefilter_shader);
+	shader::set_int(prefilter_shader, "environmentMap", 0);
+	shader::set_mat4(prefilter_shader, "projection", captureProjection);
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
@@ -216,21 +216,21 @@ void Skybox::on_load(World& world) {
 		glViewport(0, 0, mipWidth, mipHeight);
 
 		float roughness = (float)mip / (float)(maxMipLevels - 1);
-		prefilter_shader->location("roughness").set_float(roughness);
+		shader::set_float(prefilter_shader, "roughness", roughness);
 		for (unsigned int i = 0; i < 6; ++i)
 		{
-			prefilter_shader->location("view").set_mat4(captureViews[i]);
+			shader::set_mat4(prefilter_shader, "view", captureViews[i]);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
 				GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, prefilterMap, mip);
 
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			cube->meshes[0].buffer.bind();
-			glDrawElements(GL_TRIANGLES, cube->meshes[0].buffer.length, GL_UNSIGNED_INT, 0);
+			cube_model->meshes[0].buffer.bind();
+			glDrawElements(GL_TRIANGLES, cube_model->meshes[0].buffer.length, GL_UNSIGNED_INT, 0);
 		}
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	auto brdf_shader = load_Shader(world, "shaders/brdf_convultion.vert", "shaders/brdf_convultion.frag");
+	auto brdf_shader = load_Shader("shaders/brdf_convultion.vert", "shaders/brdf_convultion.frag");
 
 	unsigned int brdfLUTTexture;
 	glGenTextures(1, &brdfLUTTexture);
@@ -249,33 +249,33 @@ void Skybox::on_load(World& world) {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, brdfLUTTexture, 0);
 
 	glViewport(0, 0, 512, 512);
-	brdf_shader->bind();
+	shader::bind(brdf_shader);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	render_quad();
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	auto brdf_LUT_as_texture = make_Texture(world);
-	brdf_LUT_as_texture->filename = "brdf_LUT";
-	brdf_LUT_as_texture->texture_id = brdfLUTTexture;
+	Texture brdf_LUT_as_texture;
+	brdf_LUT_as_texture.filename = "brdf_LUT";
+	brdf_LUT_as_texture.texture_id = brdfLUTTexture;
 
-	auto env_cubemap_as_texture = make_Cubemap(world);
-	env_cubemap_as_texture->filename = "env_cubemap";
-	env_cubemap_as_texture->texture_id = envCubemap;
+	Cubemap env_cubemap_as_texture;
+	env_cubemap_as_texture.filename = "env_cubemap";
+	env_cubemap_as_texture.texture_id = envCubemap;
 
-	auto irradiance_cubemap_as_texture = make_Cubemap(world);
-	irradiance_cubemap_as_texture->filename = "iraddiance_map";
-	irradiance_cubemap_as_texture->texture_id = irradianceMap;
+	Cubemap irradiance_cubemap_as_texture;
+	irradiance_cubemap_as_texture.filename = "iraddiance_map";
+	irradiance_cubemap_as_texture.texture_id = irradianceMap;
 
-	auto prefilter_cubemap_as_texture = make_Cubemap(world);
-	prefilter_cubemap_as_texture->filename = "prefilter_map";
-	prefilter_cubemap_as_texture->texture_id = prefilterMap;
+	Cubemap prefilter_cubemap_as_texture;
+	prefilter_cubemap_as_texture.filename = "prefilter_map";
+	prefilter_cubemap_as_texture.texture_id = prefilterMap;
 
-	this->brdf_LUT = world.id_of(brdf_LUT_as_texture);
-	this->env_cubemap = world.id_of(env_cubemap_as_texture);
-	this->irradiance_cubemap = world.id_of(irradiance_cubemap_as_texture);
-	this->env_cubemap = world.id_of(env_cubemap_as_texture);
-	this->prefilter_cubemap = world.id_of(prefilter_cubemap_as_texture);
+	this->brdf_LUT = make_Texture(std::move(brdf_LUT_as_texture));
+	this->env_cubemap = make_Cubemap(std::move(env_cubemap_as_texture));
+	this->irradiance_cubemap = make_Cubemap(std::move(irradiance_cubemap_as_texture));
+	this->env_cubemap = make_Cubemap(std::move(env_cubemap_as_texture));
+	this->prefilter_cubemap = make_Cubemap(std::move(prefilter_cubemap_as_texture));
 
 	return;
 }
@@ -292,17 +292,19 @@ Skybox* load_Skybox(World& world, const std::string& filename) {
 	sky->filename = filename;
 	sky->on_load(world);
 
-	auto skybox_shader = load_Shader(world, "shaders/skybox.vert", "shaders/skybox.frag");
+	auto skybox_shader = load_Shader("shaders/skybox.vert", "shaders/skybox.frag");
 	auto cube_model = load_Model(world, "cube.fbx");
 
 	Material mat;
-	mat.shader = world.id_of(skybox_shader);
-	mat.params.append(make_Param_Cubemap(skybox_shader->location("environmentMap"), sky->env_cubemap));
+	mat.shader = skybox_shader;
+	mat.params.append(make_Param_Cubemap(location(skybox_shader, "environmentMap"), sky->env_cubemap));
 	mat.state = &skybox_draw_state;
-
+	
 	auto model_renderer = world.make<ModelRenderer>(id);
-	model_renderer->materials.append(mat);
-	model_renderer->model_id = world.id_of(cube_model);
+	model_renderer->model_id = cube_model;
+
+	auto materials = world.make<Materials>(id);
+	materials->materials.append(mat);
 
 	auto trans = world.make<Transform>(id);
 

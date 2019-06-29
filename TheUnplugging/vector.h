@@ -3,13 +3,14 @@
 #include "allocator.h"
 #include <initializer_list>
 #include <memory.h>
+#include <type_traits>
 
 #define BOUNDS_CHECKING
 
 #include <iterator>
 
 template<typename T>
-struct vec_iterator : std::iterator_traits<T> {
+struct vec_iterator : std::iterator<std::random_access_iterator_tag, T> {
 	const T* data = NULL;
 	unsigned int index = 0;
 
@@ -17,11 +18,15 @@ struct vec_iterator : std::iterator_traits<T> {
 
 	}
 
-	inline bool operator==(vec_iterator<T>& other) {
+	inline int operator-(const vec_iterator<T>& other) const {
+		return this->index - other.index;
+	}
+
+	inline bool operator==(vec_iterator<T>& other) const {
 		return other.index == index && other.data == data;
 	}
 
-	inline bool operator!=(vec_iterator<T>& other) {
+	inline bool operator!=(vec_iterator<T>& other) const {
 		return !(*this == other);
 	}
 
@@ -35,7 +40,7 @@ struct vec_iterator : std::iterator_traits<T> {
 		return *this;
 	}
 
-	inline T& operator[](int i) {
+	inline T& operator[](int i) const {
 		return this->data[i];
 	}
 
@@ -177,11 +182,15 @@ struct vector {
 
 		return *this;
 	}
-
-	vector<T>& operator=(const vector<T>& other) {
+	
+	void free_data() {
 		for (int i = 0; i < length; i++) {
 			data[i].~T();
 		}
+	}
+
+	inline vector<T>& operator=(const vector<T>& other) {
+		free_data();
 
 		this->reserve(other.length);
 		this->allocator = other.allocator;
@@ -198,9 +207,7 @@ struct vector {
 	}
 
 	inline ~vector() {
-		for (int i = 0; i < length; i++) {
-			data[i].~T();
-		}
+		free_data();
 		allocator->deallocate(data);
 	}
 

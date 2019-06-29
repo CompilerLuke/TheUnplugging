@@ -11,7 +11,7 @@
 #include "reflection.h"
 
 enum Cull {Cull_Front, Cull_Back, Cull_None};
-enum DepthFunc {DepthFunc_Less, DepthFunc_Lequal};
+enum DepthFunc {DepthFunc_Less, DepthFunc_Lequal, DepthFunc_None};
 enum DrawOrder {
 	draw_opaque = 0,
 	draw_skybox = 1,
@@ -19,11 +19,21 @@ enum DrawOrder {
 	draw_over = 3
 };
 
+enum StencilOp { Stencil_Keep_Replace };
+enum StencilFunc { StencilFunc_Equal, StencilFunc_NotEqual, StencilFunc_Always, StencilFunc_None };
+using StencilMask = unsigned int;
+enum DrawMode { DrawSolid, DrawWireframe };
+
 struct DrawCommandState {
 	Cull cull = Cull_None;
 	DepthFunc depth_func = DepthFunc_Lequal;
 	bool clear_depth_buffer = false;
 	DrawOrder order = draw_opaque;
+	bool clear_stencil_buffer = false;
+	StencilOp stencil_op = Stencil_Keep_Replace;
+	StencilFunc stencil_func = StencilFunc_None;
+	StencilMask stencil_mask = 0;
+	DrawMode mode = DrawSolid;
 
 	REFLECT()
 };

@@ -2,16 +2,17 @@
 
 #include "id.h"
 #include "frameBuffer.h"
+#include "shader.h"
 
 struct FogMap {
 	Framebuffer fbo;
-	ID map;
+	Handle<struct Texture> map;
 
-	FogMap(struct World&, unsigned int, unsigned int);
+	FogMap(unsigned int, unsigned int);
 };
 
 struct ShadowParams {
-	ID depth_map = 0;
+	Handle<struct Texture> depth_map;
 	glm::vec2 in_range;
 	glm::mat4 to_light;
 	glm::mat4 to_world;
@@ -21,15 +22,15 @@ struct ShadowParams {
 };
 
 struct VolumetricPass {
-	ID depth_prepass;
+	Handle<struct Texture> depth_prepass;
 	FogMap calc_fog;
 
-	ID volume_shader;
-	ID upsample_shader;
+	Handle<Shader> volume_shader;
+	Handle<Shader> upsample_shader;
 
-	VolumetricPass(struct World&, struct Window&, ID);
+	VolumetricPass(struct Window&, Handle<struct Texture>);
 	void clear();
 
 	void render_with_cascade(struct World&, struct RenderParams&, ShadowParams& shadow_params);
-	void render_upsampled(struct World&, ID);
+	void render_upsampled(struct World&, Handle<struct Texture>);
 };

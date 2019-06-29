@@ -11,37 +11,34 @@
 #include "transform.h"
 #include "primitives.h"
 #include "camera.h"
+#include "rhi.h"
 
 DepthMap::DepthMap(unsigned int width, unsigned int height, World& world) {
-	auto depthMap = world.make_ID();
-	AttachmentSettings attachment(depthMap);
+	AttachmentSettings attachment(this->depth_map);
 
 	FramebufferSettings settings;
 	settings.width = width;
 	settings.height = height;
 	settings.depth_attachment = &attachment;
 	settings.depth_buffer = DepthComponent24;
-
-	this->depth_map = depthMap;
-	this->depth_map_FBO = Framebuffer(world, settings);
-
-	this->depth_shader = world.id_of(load_Shader(world, "shaders/pbr.vert", "shaders/depth.frag"));
+	
+	this->depth_map_FBO = Framebuffer(settings);
+	this->depth_shader = load_Shader("shaders/pbr.vert", "shaders/depth.frag", true);
 }
 
-ShadowPass::ShadowPass(Window& window, World& world, ID depth_prepass) :
+ShadowPass::ShadowPass(Window& window, World& world, Handle<Texture> depth_prepass) :
 	deffered_map_cascade(4096, 4096, world),
 	ping_pong_shadow_mask(window, world),
 	shadow_mask(window, world),
-	volumetric(world, window, depth_prepass),
+	volumetric(window, depth_prepass),
 	depth_prepass(depth_prepass),
-	screenspace_blur_shader(world.id_of(load_Shader(world, "shaders/screenspace.vert", "shaders/blur.frag"))),
-	shadow_mask_shader(world.id_of(load_Shader(world, "shaders/screenspace.vert", "shaders/shadowMask.frag")))
+	screenspace_blur_shader(load_Shader("shaders/screenspace.vert", "shaders/blur.frag")),
+	shadow_mask_shader(load_Shader("shaders/screenspace.vert", "shaders/shadowMask.frag"))
 {
 }
 
 ShadowMask::ShadowMask(Window& window, World& world) {
-	ID tex = world.make_ID();
-	AttachmentSettings color_attachment(tex);
+	AttachmentSettings color_attachment(this->shadow_mask_map);
 	color_attachment.mag_filter = Linear;
 	color_attachment.min_filter = Linear;
 	color_attachment.wrap_s = Repeat;
@@ -53,18 +50,16 @@ ShadowMask::ShadowMask(Window& window, World& world) {
 	settings.color_attachments.append(color_attachment);
 	settings.depth_buffer = DepthComponent24;
 
-	this->shadow_mask_map = tex;
-	this->shadow_mask_map_fbo = Framebuffer(world, settings);
+	this->shadow_mask_map_fbo = Framebuffer(settings);
 }
 
-void ShadowMask::set_shadow_params(Shader& shader, World& world, RenderParams& params) {
-	auto tex = world.by_id<Texture>(shadow_mask_map);
+void ShadowMask::set_shadow_params(Handle<Shader> shader, World& world, RenderParams& params) {
 	auto bind_to = params.command_buffer->next_texture_index();
-	tex->bind_to(bind_to);
-	shader.shadowMaskMap.set_int(bind_to);
+	texture::bind_to(shadow_mask_map, bind_to);
+	shader::set_int(shader, "shadowMaskMap", bind_to);
 }
 
-void ShadowPass::set_shadow_params(Shader& shader, World& world, RenderParams& params) {
+void ShadowPass::set_shadow_params(Handle<Shader> shader, World& world, RenderParams& params) {
 	this->shadow_mask.set_shadow_params(shader, world, params);
 }
 
@@ -146,9 +141,7 @@ void DepthMap::render_maps(World& world, RenderParams& params, glm::mat4 project
 	CommandBuffer command_buffer;
 
 	for (DrawCommand cmd : params.command_buffer->commands) { //makes copy of command
-		auto shad = world.by_id<Shader>(cmd.material->shader);
-		if (!shad) continue;
-
+		auto shad = RHI::shader_manager.get(cmd.material->shader);
 		if (shad->v_filename == "shaders/skybox.vert") continue; //currently different vertex shader is not supported
 
 		auto depth_material = TEMPORARY_ALLOC(Material);
@@ -198,10 +191,6 @@ void ShadowPass::render(World& world, RenderParams& params) {
 
 	float last_clip_space = -1.0f;
 
-	auto shadow_mask_shader = world.by_id<Shader>(this->shadow_mask_shader);
-	auto depth_prepass = world.by_id<Texture>(this->depth_prepass);
-	auto shadow_map = world.by_id<Texture>(this->shadow_mask.shadow_mask_map);
-
 	this->volumetric.clear();
 
 	for (int i = 0; i < num_cascades; i++) {
@@ -212,21 +201,21 @@ void ShadowPass::render(World& world, RenderParams& params) {
 
 		glDisable(GL_DEPTH_TEST);
 
-		shadow_mask_shader->bind();
+		shader::bind(shadow_mask_shader);
 
-		depth_prepass->bind_to(0);
-		shadow_mask_shader->location("depthPrepass").set_int(0);
+		texture::bind_to(depth_prepass, 0);
+		shader::set_int(shadow_mask_shader, "depthPrepass", 0);
 
-		shadow_map->bind_to(1);
-		shadow_mask_shader->location("depthMap").set_int(1);
+		texture::bind_to(shadow_mask.shadow_mask_map, 1);
+		shader::set_int(shadow_mask_shader, "depthMap", 1);
 
-		shadow_mask_shader->location("gCascadeEndClipSpace[0]").set_float(last_clip_space);
-		shadow_mask_shader->location("gCascadeEndClipSpace[1]").set_float(proj_info.endClipSpace);
+		shader::set_float(shadow_mask_shader, "gCascadeEndClipSpace[0]", last_clip_space);
+		shader::set_float(shadow_mask_shader, "gCascadeEndClipSpace[1]", proj_info.endClipSpace);
 	
 		glm::mat4 ident_matrix(1.0);
-		shadow_mask_shader->location("model").set_mat4(ident_matrix);
+		shader::set_mat4(shadow_mask_shader, "model", ident_matrix);
 
-		shadow_mask_shader->location("cascadeLevel").set_int(i);
+		shader::set_int(shadow_mask_shader, "cascadeLevel", i);
 		
 		glm::vec2 in_range(last_clip_space, proj_info.endClipSpace);
 
@@ -255,29 +244,25 @@ void ShadowPass::render(World& world, RenderParams& params) {
 
 	glDisable(GL_DEPTH_TEST);
 
-	auto blur_shader = world.by_id<Shader>(this->screenspace_blur_shader);
-
 	constexpr int amount = 10;
 
 	for (int i = 0; i < amount; i++) {
 		if (!horizontal) shadow_mask.shadow_mask_map_fbo.bind();
 		else ping_pong_shadow_mask.shadow_mask_map_fbo.bind();
 
-		blur_shader->bind();
+		shader::bind(screenspace_blur_shader);
 		
 		Texture* bind_to;
 		if (first_iteration)
-			bind_to = world.by_id<Texture>(shadow_mask.shadow_mask_map);
+			texture::bind_to(shadow_mask.shadow_mask_map, 0);
 		else
-			bind_to = world.by_id<Texture>(ping_pong_shadow_mask.shadow_mask_map);
+			texture::bind_to(ping_pong_shadow_mask.shadow_mask_map, 0);
 
-		bind_to->bind_to(0);
-
-		blur_shader->location("image").set_int(0);
-		blur_shader->location("horizontal").set_int(horizontal);
+		shader::set_int(screenspace_blur_shader, "image", 0);
+		shader::set_int(screenspace_blur_shader, "horizontal", horizontal);
 
 		glm::mat4 m(1.0);
-		blur_shader->location("model").set_mat4(m);
+		shader::set_mat4(screenspace_blur_shader, "model", m);
 
 		render_quad();
 

@@ -1,39 +1,40 @@
 #include "model.h"
 #include "transform.h"
 #include "temporary.h"
+#include "rhi.h"
 
 REFLECT_STRUCT_BEGIN(ModelRenderer)
 REFLECT_STRUCT_MEMBER(visible)
 REFLECT_STRUCT_MEMBER_TAG(model_id, reflect::ModelIDTag)
-REFLECT_STRUCT_MEMBER(materials)
 REFLECT_STRUCT_END()
 
 void ModelRendererSystem::render(World& world, RenderParams& params) {
-	for (ID id : world.filter<ModelRenderer, Transform>(params.layermask)) {
+	for (ID id : world.filter<ModelRenderer, Materials, Transform>(params.layermask)) {
 		auto transform = world.by_id<Transform>(id);
 		auto self = world.by_id<ModelRenderer>(id);
+		auto materials = world.by_id<Materials>(id);
 
 		if (!self->visible) continue;
-		if (self->model_id == -1) continue;
+		if (self->model_id.id == INVALID_HANDLE) continue;
 
-		auto model = world.by_id<Model>(self->model_id);
+		auto model = RHI::model_manager.get(self->model_id);
 		if (!model) continue;
 
-		assert(model->materials.length == self->materials.length);
+		assert(model->materials.length == materials->materials.length);
 
 		auto model_m = TEMPORARY_ALLOC(glm::mat4);
 		*model_m = transform->compute_model_matrix();
 
-		model->render(world.id_of(self), model_m, self->materials, params);
+		model->render(world.id_of(self), model_m, materials->materials, params);
 	}
 }
 
 void ModelRenderer::set_materials(World& world, vector<Material>& materials) {
 	vector<Material> materials_in_order;
 
-	if (this->model_id == -1) return;
+	if (this->model_id.id == INVALID_HANDLE) return;
 	
-	auto model = world.by_id<Model>(this->model_id);
+	auto model = RHI::model_manager.get(this->model_id);
 	if (!model) return;
 
 	for (auto& mat_name : model->materials) {
@@ -43,5 +44,12 @@ void ModelRenderer::set_materials(World& world, vector<Material>& materials) {
 		materials_in_order.append(*mat);
 	}
 
-	this->materials = materials_in_order;
+	auto this_id = world.id_of(this);
+	auto material_component = world.by_id<Materials>(this_id);
+	
+	if (material_component == NULL) {
+		material_component = world.make<Materials>(this_id);
+	}
+	material_component->materials = materials_in_order;
 }
+

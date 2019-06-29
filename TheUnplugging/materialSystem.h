@@ -8,6 +8,7 @@
 #include "reflection.h"
 #include "draw.h"
 #include "vector.h"
+#include "handle.h"
 
 enum Param_Type {
 	Param_Vec3,
@@ -19,14 +20,14 @@ enum Param_Type {
 };
 
 struct Param {
-	Uniform loc;
+	Handle<Uniform> loc;
 	Param_Type type;
 	union {
 		glm::vec3 vec3;
 		glm::vec2 vec2;
 		glm::mat4 matrix;
-		ID image;
-		ID cubemap;
+		Handle<struct Texture> image;
+		Handle<struct Cubemap> cubemap;
 		int integer;
 	};
 
@@ -35,18 +36,24 @@ struct Param {
 	REFLECT_UNION()
 };
 
-Param make_Param_Vec3(const Uniform& loc, glm::vec3);
-Param make_Param_Cubemap(const Uniform& loc, ID);
+Param make_Param_Int(Handle<Uniform> loc, int);
+Param make_Param_Vec3(Handle<Uniform> loc, glm::vec3);
+Param make_Param_Cubemap(Handle<Uniform> loc, Handle<struct Cubemap>);
 
 struct Material {
 	std::string name;
-	ID shader;
+	Handle<Shader> shader;
 	vector<Param> params;
 	DrawCommandState* state;
 
 	REFLECT()
 };
 
+struct Materials {
+	vector<Material> materials;
+
+	REFLECT()
+};
 
 Material* material_by_name(vector<Material>&, const std::string&);
 vector<Param> make_SubstanceMaterial(World& world, const std::string& folder, const std::string& name);

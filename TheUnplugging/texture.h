@@ -2,6 +2,7 @@
 
 #include <stb_image.h>
 #include <string>
+#include "handle.h"
 #include "reflection.h"
 
 using TextureID = unsigned int;
@@ -10,10 +11,13 @@ struct Texture {
 	std::string filename;
 	TextureID texture_id = 0;
 
-	void on_load(struct World&);
-	void bind_to(unsigned int);
+	void on_load();
 
 	REFLECT()
+};
+
+namespace texture {
+	void bind_to(Handle<Texture>, unsigned int);
 };
 
 struct Cubemap {
@@ -24,6 +28,11 @@ struct Cubemap {
 	REFLECT()
 };
 
-Texture* load_Texture(struct World&, const std::string& filename);
-Texture* make_Texture(struct World&);
-Cubemap* make_Cubemap(struct World&);
+namespace cubemap {
+	void bind_to(Handle<Cubemap>, unsigned int);
+};
+
+
+Handle<Texture> load_Texture(const std::string& filename);
+Handle<Texture> make_Texture(Texture&&);
+Handle<Cubemap> make_Cubemap(Cubemap&&);

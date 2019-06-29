@@ -4,10 +4,15 @@
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 #include "layermask.h"
+#include "rhi.h"
 #include "vector.h"
 
-REFLECT_STRUCT_BEGIN(Uniform)
-REFLECT_STRUCT_MEMBER(name)
+REFLECT_GENERIC_STRUCT_BEGIN(Handle<Shader>)
+REFLECT_STRUCT_MEMBER(id)
+REFLECT_STRUCT_END()
+
+REFLECT_GENERIC_STRUCT_BEGIN(Handle<Uniform>)
+REFLECT_STRUCT_MEMBER(id)
 REFLECT_STRUCT_END()
 
 REFLECT_STRUCT_BEGIN(Shader)
@@ -16,30 +21,47 @@ REFLECT_STRUCT_MEMBER(f_filename)
 REFLECT_STRUCT_MEMBER(supports_instancing)
 REFLECT_STRUCT_END()
 
-Shader* load_Shader(World& world, const std::string& vfilename, const std::string& ffilename, bool supports_instancing, bool instanced) {
-	vector<Shader*> existing_shaders = world.filter<Shader>(any_layer);
-	for (int i = 0; i < existing_shaders.length; i++) {
-		if (existing_shaders[i]->v_filename == vfilename && existing_shaders[i]->f_filename == ffilename) {
-			return existing_shaders[i]; 
+Handle<Shader> load_Shader(const std::string& vfilename, const std::string& ffilename, bool supports_instancing, bool instanced) {
+	auto& existing_shaders = RHI::shader_manager.slots;
+
+	for (int i = 0; i < existing_shaders.length; i++) { //todo move to ShaderManager
+		if (existing_shaders[i].generation == INVALID_SLOT) continue;
+		auto& existing_shader = existing_shaders[i].obj;
+
+		if (existing_shader.v_filename == vfilename && existing_shader.f_filename == ffilename) {
+				return RHI::shader_manager.index_to_handle(i);
 		}
 	}
 
-	auto id = world.make_ID();
-	auto e = world.make<Entity>(id);
-	auto shad = world.make<Shader>(id);
+	Shader shad;
 
-	shad->v_filename = vfilename;
-	shad->f_filename = ffilename;
+	shad.v_filename = vfilename;
+	shad.f_filename = ffilename;
 
-	shad->supports_instancing = instanced;
-	shad->instanced = instanced;
+	shad.supports_instancing = supports_instancing;
+	shad.instanced = instanced;
 
-	shad->load_in_place(world);
+	shad.load_in_place();
 
-	return shad;
+	return RHI::shader_manager.make(std::move(shad));
+}
+
+Shader::Shader(Shader&& other) {
+	this->f_filename = std::move(other.f_filename);
+	this->v_filename = std::move(other.v_filename);
+	this->f_time_modified = other.f_time_modified;
+	this->v_time_modified = other.v_time_modified;
+	this->id = other.id;
+	this->instanced = other.instanced;
+	this->instanced_version = other.instanced_version;
+	this->supports_instancing = other.supports_instancing;
+	this->uniforms = std::move(other.uniforms);
+
+	other.id = -1;
 }
 
 Shader::~Shader() {
+	if (this->id == -1) return;
 	glDeleteProgram(id);
 }
 
@@ -66,11 +88,7 @@ GLint make_shader(const std::string& filename, const std::string& source, GLenum
 	return shader;
 }
 
-void Shader::on_load(World& world) {
-	this->load_in_place(world);
-}
-
-void Shader::load_in_place(World& world) {
+void Shader::load_in_place() {
 	std::string vshader_source;
 	std::string fshader_source;
 
@@ -82,15 +100,12 @@ void Shader::load_in_place(World& world) {
 	fshader_source = prefix;
 
 	{
-		File vshader_f(world.level, v_filename);
-		File fshader_f(world.level, f_filename);
+		File vshader_f(v_filename);
+		File fshader_f(f_filename);
 
 		vshader_source += vshader_f.read();
 		fshader_source += fshader_f.read();
 	}
-
-
-
 
 	int sucess = 0;
 	char info_log[512];
@@ -117,24 +132,11 @@ void Shader::load_in_place(World& world) {
 
 	this->id = id;
 
-	this->irradianceMap = this->location("irradianceMap");
-	this->prefilterMap = this->location("prefilterMap");
-	this->brdfLUT = this->location("brdfLUT");
-	this->model = this->location("model");
-	this->projection = this->location("projection");
-	this->view = this->location("view");
-	this->viewPos = this->location("viewPos");
-	this->dirLight_color = this->location("dirLight.color");
-	this->dirLight_direction = this->location("dirLight.direction");
-	
-	this->shadowMaskMap = this->location("shadowMaskMap");
+	this->v_time_modified = Level::time_modified(v_filename);
+	this->f_time_modified = Level::time_modified(f_filename);
 
-	this->v_time_modified = world.level.time_modified(v_filename);
-	this->f_time_modified = world.level.time_modified(f_filename);
-
-	if (this->supports_instancing && this->instanced) {
-		auto instanced_version = load_Shader(world, v_filename, f_filename, true, true);
-		this->instanced_version = std::unique_ptr<Shader>(instanced_version);
+	if (this->supports_instancing && !this->instanced) {
+		this->instanced_version = load_Shader(v_filename, f_filename, true, true);
 	}
 }
 
@@ -142,32 +144,75 @@ void Shader::bind() {
 	glUseProgram(id);
 }
 
-Uniform Shader::location(const std::string& name) {
-	return Uniform(name, glGetUniformLocation(id, name.c_str()));
+Handle<Uniform> location(Handle<Shader> handle, const std::string& name) {
+	Shader* shader = RHI::shader_manager.get(handle);
+
+	for (unsigned int i = 0; i < shader->uniforms.length; i++) {
+		if (shader->uniforms[i].name == name) {
+			return { i };
+		}
+	}
+
+	shader->uniforms.append(Uniform(name, glGetUniformLocation(shader->id, name.c_str())));
+
+	return { shader->uniforms.length - 1 };
 }
 
 Uniform::Uniform(const std::string& name, int id) :
 	name(name),
 	id(id)
 {
+	log(name.c_str());
+	log(std::to_string(id).c_str());
 }
 
-void Uniform::set_mat4(glm::mat4& value) {
-	glUniformMatrix4fv(id, 1, false, glm::value_ptr(value));
+Uniform* get_uniform(Handle<Shader> shader_handle, Handle<Uniform> uniform_handle) {
+	Shader* shader = RHI::shader_manager.get(shader_handle);
+	return &shader->uniforms[uniform_handle.id];
 }
 
-void Uniform::set_vec3(glm::vec3& value) {
-	glUniform3fv(id, 1, glm::value_ptr(value));
-}
+namespace shader {
+	void bind(Handle<Shader> shader) {
+		RHI::shader_manager.get(shader)->bind();
+	}
 
-void Uniform::set_vec2(glm::vec2& value) {
-	glUniform2fv(id, 1, glm::value_ptr(value));
-}
+	void set_mat4(Handle<Shader> shader_handle, Handle<Uniform> uniform, glm::mat4& value) {
+		glUniformMatrix4fv(get_uniform(shader_handle, uniform)->id, 1, false, glm::value_ptr(value));
+	}
 
-void Uniform::set_int(int value) {
-	glUniform1i(id, value);
-}
+	void set_vec3(Handle<Shader> shader_handle, Handle<Uniform> uniform, glm::vec3& value) {
+		glUniform3fv(get_uniform(shader_handle, uniform)->id, 1, glm::value_ptr(value));
+	}
 
-void Uniform::set_float(float value) {
-	glUniform1f(id, value);
+	void set_vec2(Handle<Shader> shader_handle, Handle<Uniform> uniform, glm::vec2& value) {
+		glUniform2fv(get_uniform(shader_handle, uniform)->id, 1, glm::value_ptr(value));
+	}
+
+	void set_int(Handle<Shader> shader_handle, Handle<Uniform> uniform, int value) {
+		glUniform1i(get_uniform(shader_handle, uniform)->id, value);
+	}
+
+	void set_float(Handle<Shader> shader_handle, Handle<Uniform> uniform, float value) {
+		glUniform1f(get_uniform(shader_handle, uniform)->id, value);
+	}
+
+	void set_mat4(Handle<Shader> shader_handle, const char* uniform, glm::mat4& value) {
+		glUniformMatrix4fv(get_uniform(shader_handle, location(shader_handle, uniform))->id, 1, false, glm::value_ptr(value));
+	}
+
+	void set_vec3(Handle<Shader> shader_handle, const char* uniform, glm::vec3& value) {
+		glUniform3fv(get_uniform(shader_handle, location(shader_handle, uniform))->id, 1, glm::value_ptr(value));
+	}
+
+	void set_vec2(Handle<Shader> shader_handle, const char* uniform, glm::vec2& value) {
+		glUniform2fv(get_uniform(shader_handle, location(shader_handle, uniform))->id, 1, glm::value_ptr(value));
+	}
+
+	void set_int(Handle<Shader> shader_handle, const char* uniform, int value) {
+		glUniform1i(get_uniform(shader_handle, location(shader_handle, uniform))->id, value);
+	}
+
+	void set_float(Handle<Shader> shader_handle, const char* uniform, float value) {
+		glUniform1f(get_uniform(shader_handle, location(shader_handle, uniform))->id, value);
+	}
 }

@@ -1,5 +1,5 @@
 #include "physics.h"
-#include <BtWrapper.h>
+#include "btWrapper2.h"
 #include "ecs.h"
 #include "transform.h"
 #include <algorithm>
@@ -31,8 +31,6 @@ REFLECT_STRUCT_MEMBER(override_velocity_y)
 REFLECT_STRUCT_MEMBER(override_velocity_z)
 REFLECT_STRUCT_MEMBER(continous)
 REFLECT_STRUCT_END()
-
-
 
 PhysicsSystem::PhysicsSystem() 
 : bt_wrapper(make_BulletWrapper()) {
@@ -105,9 +103,9 @@ void PhysicsSystem::update(World& world, UpdateParams& params) {
 		transform_of_RigidBody(rb->bt_rigid_body, &trans_of_rb);
 
 		if (!rb->override_position) 
-			trans->position = (glm::vec3&)trans_of_rb.position;
+			trans->position = trans_of_rb.position;
 		else 
-			trans_of_rb.position = (Compat_Vec3&)trans->position;
+			trans_of_rb.position = trans->position;
 		
 		if (!rb->override_velocity_x)
 			rb->velocity.x = trans_of_rb.velocity.x;

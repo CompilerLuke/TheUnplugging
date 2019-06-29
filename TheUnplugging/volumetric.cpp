@@ -8,8 +8,8 @@
 #include "transform.h"
 #include "camera.h"
 
-FogMap::FogMap(World& world, unsigned int width, unsigned int height) {
-	auto tex = world.make_ID();
+FogMap::FogMap(unsigned int width, unsigned int height) {
+	Handle<Texture> tex;
 	
 	AttachmentSettings color_attachment(tex);
 	color_attachment.min_filter = Nearest;
@@ -23,15 +23,15 @@ FogMap::FogMap(World& world, unsigned int width, unsigned int height) {
 	settings.depth_buffer = DepthComponent24;
 	settings.color_attachments.append(color_attachment);
 
-	this->fbo = Framebuffer(world, settings);
+	this->fbo = Framebuffer(settings);
 	this->map = tex;
 }
 
-VolumetricPass::VolumetricPass(World& world, Window& window, ID depth_prepass)
-	: calc_fog(world, window.width / 2.0f, window.height / 2.0f),
+VolumetricPass::VolumetricPass( Window& window, Handle<Texture> depth_prepass)
+	: calc_fog(window.width / 2.0f, window.height / 2.0f),
 	  depth_prepass(depth_prepass),
-	  volume_shader(world.id_of(load_Shader(world, "shaders/screenspace.vert", "shaders/volumetric.frag"))),
-	  upsample_shader(world.id_of(load_Shader(world, "shaders/screenspace.vert", "shaders/volumetric_upsample.frag")))
+	  volume_shader(load_Shader("shaders/screenspace.vert", "shaders/volumetric.frag")),
+	  upsample_shader(load_Shader("shaders/screenspace.vert", "shaders/volumetric_upsample.frag"))
 {
 }
 
@@ -43,10 +43,8 @@ void VolumetricPass::clear() {
 
 void VolumetricPass::render_with_cascade(World& world, RenderParams& render_params, ShadowParams& params) {
 	if (!render_params.cam) return;
-
-	auto volume_shader = world.by_id<Shader>(this->volume_shader);
 	
-	volume_shader->bind();
+	shader::bind(volume_shader);
 
 	calc_fog.fbo.bind();
 	
@@ -59,34 +57,31 @@ void VolumetricPass::render_with_cascade(World& world, RenderParams& render_para
 	auto dir_light_trans = world.by_id<Transform>(world.id_of(dir_light));
 	if (!dir_light_trans) return;
 
-	auto depth_prepass = world.by_id<Texture>(this->depth_prepass);
-	auto depth_map = world.by_id<Texture>(params.depth_map);
+	texture::bind_to(depth_prepass, 0);
+	shader::set_int(volume_shader, "depthPrepass", 0);
 
-	depth_prepass->bind_to(0);
-	volume_shader->location("depthPrepass").set_int(0);
-
-	depth_map->bind_to(0);
-	volume_shader->location("depthMap").set_int(1);
+	texture::bind_to(params.depth_map, 0);
+	shader::set_int(volume_shader, "depthMap", 1);
 
 	auto cam_trans = world.by_id<Transform>(world.id_of(render_params.cam));
 	if (!cam_trans) return;
 
-	volume_shader->location("camPosition").set_vec3(cam_trans->position);
-	volume_shader->location("sunColor").set_vec3(dir_light->color);
-	volume_shader->location("sunDirection").set_vec3(dir_light->direction);
-	volume_shader->location("sunPosition").set_vec3(dir_light_trans->position);
+	shader::set_vec3(volume_shader, "camPosition", cam_trans->position);
+	shader::set_vec3(volume_shader, "sunColor", dir_light->color);
+	shader::set_vec3(volume_shader, "sunDirection", dir_light->direction);
+	shader::set_vec3(volume_shader, "sunPosition", dir_light_trans->position);
 
-	volume_shader->location("gCascadeEndClipSpace[0]").set_float(params.in_range.x);
-	volume_shader->location("gCascadeEndClipSpace[1]").set_float(params.in_range.y);
+	shader::set_float(volume_shader, "gCascadeEndClipSpace[0]", params.in_range.x);
+	shader::set_float(volume_shader, "gCascadeEndClipSpace[1]", params.in_range.y);
 
-	volume_shader->location("toLight").set_mat4(params.to_light);
-	volume_shader->location("toWorld").set_mat4(params.to_world);
+	shader::set_mat4(volume_shader, "toLight", params.to_light);
+	shader::set_mat4(volume_shader, "toWorld", params.to_world);
 
-	volume_shader->location("cascadeLevel").set_int(params.cascade);
-	volume_shader->location("endCascade").set_float(render_params.cam->far_plane);
+	shader::set_int(volume_shader, "cascadeLevel", params.cascade);
+	shader::set_float(volume_shader, "endCascade", render_params.cam->far_plane);
 
 	glm::mat4 ident(1.0);
-	volume_shader->location("model").set_mat4(ident);
+	shader::set_mat4(volume_shader, "model", ident);
 
 	render_quad();
 
@@ -96,27 +91,25 @@ void VolumetricPass::render_with_cascade(World& world, RenderParams& render_para
 	calc_fog.fbo.unbind();
 }
 
-void VolumetricPass::render_upsampled(World& world, ID current_frame_id) {
-	auto volumetric_map = world.by_id<Texture>(calc_fog.map);
-	auto upsample_shader = world.by_id<Shader>(this->upsample_shader);
-	auto depth_prepass = world.by_id<Texture>(this->depth_prepass);
-	auto current_frame = world.by_id<Texture>(current_frame_id);
+void VolumetricPass::render_upsampled(World& world, Handle<Texture> current_frame_id) {
+	auto volumetric_map = calc_fog.map;
+	auto current_frame = current_frame_id;
 	
-	upsample_shader->bind();
+	shader::bind(upsample_shader);
 
 	glDisable(GL_DEPTH_TEST);
 
-	upsample_shader->location("depthPrepass").set_int(0);
-	depth_prepass->bind_to(0);
+	shader::set_int(upsample_shader, "depthPrepass", 0);
+	texture::bind_to(depth_prepass, 0);
 
-	upsample_shader->location("volumetricMap").set_int(1);
-	volumetric_map->bind_to(1);
+	shader::set_int(upsample_shader, "volumetricMap", 1);
+	texture::bind_to(volumetric_map, 1);
 
-	upsample_shader->location("frameMap").set_int(2);
-	current_frame->bind_to(2);
+	shader::set_int(upsample_shader, "frameMap", 2);
+	texture::bind_to(current_frame, 2);
 
 	glm::mat4 ident(1.0);
-	upsample_shader->location("model").set_mat4(ident);
+	shader::set_mat4(upsample_shader, "model", ident);
 
 	render_quad();
 

@@ -12,11 +12,13 @@ struct MainPass : Pass {
 
 	ShadowPass shadow_pass;
 
-	ID frame_map;
+	Handle<struct Texture> frame_map;
 	Framebuffer current_frame;
 	
 	void render(struct World&, struct RenderParams&) override;
-	void set_shader_params(struct Shader&, struct World&, struct RenderParams&) override;
+	void set_shader_params(Handle<Shader>, struct World&, struct RenderParams&) override;
+
+	vector<Pass*> post_process;
 
 	MainPass(struct World&, struct Window&);
 };

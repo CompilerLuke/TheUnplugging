@@ -9,6 +9,7 @@
 #include "materialSystem.h"
 #include "ecs.h"
 #include "reflection.h"
+#include "handle.h"
 
 struct Vertex {
 	glm::vec3 position;
@@ -39,19 +40,18 @@ struct Model {
 	vector<Mesh> meshes;
 	vector<std::string> materials;
 
-	void on_load(World&);
-	void load_in_place(World&);
+	void on_load();
+	void load_in_place();
 	void render(ID, glm::mat4*, vector<Material>&, RenderParams&);
 
 	REFLECT()
 };
 
-Model* load_Model(World&, const std::string&);
+Handle<Model> load_Model(World&, const std::string&);
 
 struct ModelRenderer {
 	bool visible = true;
-	int model_id = -1;
-	vector<Material> materials;
+	Handle<Model> model_id;
 
 	void set_materials(World&, vector<Material>& materials);
 

@@ -140,6 +140,15 @@ namespace reflect {
         typeDesc->size = sizeof(T); \
         typeDesc->members = {
 
+#define REFLECT_GENERIC_STRUCT_BEGIN(type) \
+    reflect::TypeDescriptor_Struct type::Reflection{type::initReflection}; \
+	template<>\
+    void type::initReflection(reflect::TypeDescriptor_Struct* typeDesc) { \
+        using T = type; \
+        typeDesc->name = #type; \
+        typeDesc->size = sizeof(T); \
+        typeDesc->members = {
+
 #define REFLECT_STRUCT_MEMBER(name) \
             {#name, offsetof(T, name), reflect::TypeResolver<decltype(T::name)>::get(), reflect::NoTag},
 

@@ -91,6 +91,12 @@
     <Filter Include="Source Files\vendor">
       <UniqueIdentifier>{2ed1befc-12ea-4971-8dd9-9b9546711c05}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\components">
+      <UniqueIdentifier>{3c27cb12-f551-4ba2-a991-cb4f34123486}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\core">
+      <UniqueIdentifier>{fc15aa13-2a0d-427c-b9c3-a15ea1a914ea}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -122,9 +128,6 @@
     </ClCompile>
     <ClCompile Include="culling.cpp">
       <Filter>Source Files\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="draw.cpp">
-      <Filter>Source Files\opengl</Filter>
     </ClCompile>
     <ClCompile Include="renderParams.cpp">
       <Filter>Source Files\graphics</Filter>
@@ -207,9 +210,6 @@
     <ClCompile Include="logger.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
-    <ClCompile Include="flyover.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
     <ClCompile Include="transforms.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
@@ -242,6 +242,21 @@
     </ClCompile>
     <ClCompile Include="vfs.cpp">
       <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="flyover.cpp">
+      <Filter>Source Files\components</Filter>
+    </ClCompile>
+    <ClCompile Include="rhi.cpp">
+      <Filter>Source Files\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="draw.cpp">
+      <Filter>Source Files\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="custom_inspect.cpp">
+      <Filter>Source Files\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="btWrapper2.cpp">
+      <Filter>Source Files\physics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -356,9 +371,6 @@
     <ClInclude Include="vendor\imgui\examples\example_apple_metal\Shared\AppDelegate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\imgui\examples\example_apple_metal\Shared\Renderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="vendor\imgui\examples\example_apple_metal\Shared\ViewController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -400,6 +412,36 @@
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="HandleManager.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="handle.h">
+      <Filter>Header Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="shaderManager.h">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="resourceManager.h">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="rhi.h">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="textureManager.h">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="modelManager.h">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="sort.h">
+      <Filter>Header Files\containers</Filter>
+    </ClInclude>
+    <ClInclude Include="custom_inspect.h">
+      <Filter>Header Files\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="btWrapper2.h">
+      <Filter>Header Files\physics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

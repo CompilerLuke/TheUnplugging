@@ -7,6 +7,7 @@
 #include <glm/vec2.hpp>
 #include <string>
 #include <glm/mat4x4.hpp>
+#include "reflection.h"
 
 struct DisplayComponents {
 	vector<float> fps_times;
@@ -24,3 +25,7 @@ bool render_fields_primitive(unsigned int*, const std::string&);
 bool render_fields_primitive(float*, const std::string&);
 bool render_fields_primitive(std::string*, const std::string&);
 bool render_fields_primitive(bool*, const std::string&);
+
+using OnInspectGUICallback = bool(*)(void*, reflect::TypeDescriptor*, const std::string&, World&);
+
+void register_on_inspect_gui(const std::string&, OnInspectGUICallback);
